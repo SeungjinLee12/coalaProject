@@ -164,7 +164,7 @@ router.get("/research", (req, res) => {
   );
 });
 
-//카테고리 선택
+//카테고리 선택 카테고리 아이디로 검색으로 바꾸기
 router.get("/category", (req, res) => {
   const word = req.query.WORD;
   db.query(

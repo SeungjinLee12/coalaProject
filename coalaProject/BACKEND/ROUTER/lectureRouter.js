@@ -251,7 +251,7 @@ router.get("/1", (req, res) => {
 });
 
 //리뷰 작성
-router.post("/writeReview1", (req, res) => {
+router.post("/writeReview", (req, res) => {
   const userNo = req.query.userNo;
   const lectureNo = req.query.lectureNo;
   const review = req.body.REVIEW;
