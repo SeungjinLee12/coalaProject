@@ -21,6 +21,11 @@ import ModifyPassword from "./pages/Modify_Password";
 import LectureInfo from "./pages/lectureInfo";
 import LectureInfo2 from "./pages/lectureInfo2";
 import WriteReview from "./pages/WriteReview";
+import QNAList from "./pages/QNAList";
+import WriteQNA from "./pages/WriteQNA";
+import QNA from "./pages/QNA";
+
+import Lecture_watch from "./pages/Lecture_watch";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -41,9 +46,14 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "/writeReview",
+        path: "/lecture/writeReview",
         element: <WriteReview />,
       },
+      {
+        path: "/lecture/writeQNA",
+        element: <WriteQNA />,
+      },
+
       {
         path: "/lecture",
         element: <LectureInfo />,
@@ -53,11 +63,11 @@ const router = createBrowserRouter([
         element: <LectureInfo2 />,
       },
       {
-        path: "/",
+        path: "/api/",
         element: <Home />,
       },
       {
-        path: "/2",
+        path: "/api/2",
         element: <Home2 />,
       },
       {
@@ -81,7 +91,7 @@ const router = createBrowserRouter([
         element: <ModifyPassword />,
       },
       {
-        path: "/search",
+        path: "/api/search",
         element: <Search />,
       },
       {
@@ -100,10 +110,21 @@ const router = createBrowserRouter([
         path: "/Register_interest",
         element: <Register_interest />,
       },
+      {
+        path: "/lecture/QNAList",
+        element: <QNAList />,
+      },
+      {
+        path: "/lecture/QNA",
+        element: <QNA />,
+      },
     ],
   },
+  {
+    path: "/lecture/watch",
+    element: <Lecture_watch />,
+  },
 ]);
-
 function App() {
   return (
     <div className="app">

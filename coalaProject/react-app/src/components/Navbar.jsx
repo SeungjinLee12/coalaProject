@@ -1,11 +1,23 @@
-import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../img/logo.png";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Navbar = () => {
   const [isCategoryOpen, setCategoryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSubCategoryOpen, setSubCategoryOpen] = useState(false);
+
+  const [studyLectures, setStudyLectures] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${serverUrl}/api/`).then((res) => {
+      // 받아온 데이터에서 mainpage_lecture_list를 추출하여 상태를 업데이트
+      setStudyLectures(res.data.mainpage_lecture_list);
+    });
+  }, []);
 
   const dropdownItems = ["a", "b", "c", "d", "e", "f", "g"];
 
@@ -163,7 +175,7 @@ const Navbar = () => {
           alignItems: "center",
         }}
       >
-        <a href="/" style={{ textDecoration: "none", color: "inherit" }}>
+        <a href="/api/" style={{ textDecoration: "none", color: "inherit" }}>
           <div
             className="logo-name"
             style={{ display: "flex", alignItems: "center" }}

@@ -41,13 +41,17 @@ const Modify_checkUser = () => {
         }}
       >
         PASSWORD
-        <input
+        <textarea
+          aria-label="minimum height"
           type="password"
           placeholder="Enter your password"
           style={{
             marginRight: "10px",
+            width: "200px",
             marginLeft: "5px",
             textAlign: "center", // 텍스트 수평 가운데 정렬
+            border: "1px solid #ccc", // 테두리 스타일 추가
+            borderRadius: "8px", // 테두리의 둥글기 조절
           }}
         />
         <button

@@ -17,13 +17,25 @@ const MonthYearDropdowns = ({ idPrefix, label }) => {
     <div style={{ display: "flex", alignItems: "center" }}>
       <h2 style={{ paddingBottom: "8px" }}>{label}</h2>
       <span style={{ margin: "0 8px" }}></span>
-      <select id={`${idPrefix}-month`} onChange={handleMonthChange}>
+      <select
+        id={`${idPrefix}-month`}
+        onChange={handleMonthChange}
+        style={{
+          border: "1px solid #ccc", // 테두리 스타일 추가
+        }}
+      >
         <option value="hide">----</option>
         <option value="january">1월</option>
         {/* 다른 월 옵션 추가 */}
       </select>
       <span style={{ margin: "0 8px" }}>→</span>
-      <select id={`${idPrefix}-year`} onChange={handleYearChange}>
+      <select
+        id={`${idPrefix}-year`}
+        onChange={handleYearChange}
+        style={{
+          border: "1px solid #ccc", // 테두리 스타일 추가
+        }}
+      >
         <option value="hide">----</option>
         <option value="2020">2020년</option>
         {/* 다른 연도 옵션 추가 */}

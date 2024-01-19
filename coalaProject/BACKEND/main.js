@@ -5,6 +5,9 @@ const url = require("url");
 const db = require("./DB/db");
 const bodyParser = require("body-parser");
 const port = 4001;
+const cors = require("cors");
+// CORS 설정
+app.use(cors());
 
 const mainPage = require("./ROUTER/mainPageRouter");
 const login = require("./ROUTER/loginRouter");
@@ -19,5 +22,5 @@ app.use("/modifyUser", modifyUser);
 app.use("/lecture", lecture);
 
 app.listen(port, () => {
-  console.log("코알라 서버");
+  console.log("코알라 서버 포트 : " + port);
 });

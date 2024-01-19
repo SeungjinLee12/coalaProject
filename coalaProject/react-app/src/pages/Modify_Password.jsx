@@ -95,15 +95,17 @@ const Modify_Password = () => {
             }}
           >
             PASSWORD
-            <input
-              type="password"
+            <textarea
+              aria-label="minimum height"
               placeholder="Enter your password"
               style={{
                 marginRight: "10px",
                 marginLeft: "10px",
                 alignItems: "center",
-                width: "128px",
+                width: "200px",
                 paddingRight: "15px",
+                border: "1px solid #ccc", // 테두리 스타일 추가
+                borderRadius: "8px", // 테두리의 둥글기 조절
               }}
             />
           </div>
@@ -115,15 +117,17 @@ const Modify_Password = () => {
               marginLeft: "60px",
             }}
           >
-            <input
-              type="password"
-              placeholder="Re-enter your phone"
+            <textarea
+              aria-label="minimum height"
+              placeholder="Re-enter your password"
               style={{
                 marginRight: "10px",
                 marginLeft: "102px",
                 alignItems: "center",
-                width: "128px",
+                width: "200px",
                 paddingRight: "15px",
+                border: "1px solid #ccc", // 테두리 스타일 추가
+                borderRadius: "8px", // 테두리의 둥글기 조절
               }}
             />
           </div>

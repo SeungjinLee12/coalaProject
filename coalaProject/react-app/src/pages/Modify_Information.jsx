@@ -95,15 +95,16 @@ const Modify_Information = () => {
             }}
           >
             NICKNAME
-            <input
-              type="text"
+            <textarea
+              aria-label="minimum height"
               placeholder="Enter your nickname"
               style={{
                 marginRight: "10px",
                 marginLeft: "5px",
-
+                border: "1px solid #ccc", // 테두리 스타일 추가
+                borderRadius: "8px", // 테두리의 둥글기 조절
                 alignItems: "center",
-                width: "128px",
+                width: "200px",
               }}
             />
             <button
@@ -129,14 +130,16 @@ const Modify_Information = () => {
             }}
           >
             PHONE
-            <input
-              type="text"
+            <textarea
+              aria-label="minimum height"
               placeholder="Enter your phone"
               style={{
                 marginRight: "10px",
+                border: "1px solid #ccc", // 테두리 스타일 추가
+                borderRadius: "8px", // 테두리의 둥글기 조절
                 marginLeft: "33px",
                 alignItems: "center",
-                width: "128px",
+                width: "200px",
               }}
             />
           </div>
