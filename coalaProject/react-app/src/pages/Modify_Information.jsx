@@ -2,7 +2,16 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Modify_Information = () => {
+  const [inputChangeNickname, setInputNicknameChange] = useState("");
+  const [inputChangePhone, setInputPhoneChange] = useState("");
   const navigate = useNavigate();
+
+  const handleInputNicknameChange = (e) => {
+    setInputNicknameChange(e.target.value);
+  };
+  const handleInputPhoneChange = (e) => {
+    setInputPhoneChange(e.target.value);
+  };
 
   useEffect(() => {
     var animateButton = function (e) {
@@ -23,11 +32,17 @@ const Modify_Information = () => {
     }
   }, []);
 
-  const handleButtonClick = () => {
+  const handleButtonCheckNicknameClick = () => {
     setTimeout(() => {
       navigate("/");
     }, 1000);
   };
+
+  // const handleButtonClick = () => {
+  //   setTimeout(() => {
+  //     navigate("/");
+  //   }, 1000);
+  // };
 
   return (
     <div style={{ display: "flex" }}>
@@ -41,7 +56,7 @@ const Modify_Information = () => {
               비밀번호 변경
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/information"
               style={{ textDecoration: "none", color: "inherit" }}
@@ -49,7 +64,7 @@ const Modify_Information = () => {
               내 정보 수정
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/interest"
               style={{ textDecoration: "none", color: "inherit" }}
@@ -57,12 +72,20 @@ const Modify_Information = () => {
               관심분야 수정
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/payment"
               style={{ textDecoration: "none", color: "inherit" }}
             >
               결제내역
+            </a>
+          </li>
+          <li style={{ marginTop: "20%" }}>
+            <a
+              href="/modifyUser/cart"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              장바구니
             </a>
           </li>
         </ul>
@@ -95,9 +118,10 @@ const Modify_Information = () => {
             }}
           >
             NICKNAME
-            <textarea
-              aria-label="minimum height"
-              placeholder="Enter your nickname"
+            <input
+              value={inputChangeNickname}
+              onChange={handleInputNicknameChange}
+              placeholder="  Enter your nickname"
               style={{
                 marginRight: "10px",
                 marginLeft: "5px",
@@ -105,11 +129,12 @@ const Modify_Information = () => {
                 borderRadius: "8px", // 테두리의 둥글기 조절
                 alignItems: "center",
                 width: "200px",
+                height: "30px",
               }}
             />
             <button
               className="bubbly-button"
-              onClick={handleButtonClick}
+              onClick={handleButtonCheckNicknameClick}
               style={{
                 width: "50px",
                 height: "20px",
@@ -130,9 +155,10 @@ const Modify_Information = () => {
             }}
           >
             PHONE
-            <textarea
-              aria-label="minimum height"
-              placeholder="Enter your phone"
+            <input
+              value={inputChangePhone}
+              onChange={handleInputPhoneChange}
+              placeholder="   Enter your phone"
               style={{
                 marginRight: "10px",
                 border: "1px solid #ccc", // 테두리 스타일 추가
@@ -140,6 +166,7 @@ const Modify_Information = () => {
                 marginLeft: "33px",
                 alignItems: "center",
                 width: "200px",
+                height: "30px",
               }}
             />
           </div>

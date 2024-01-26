@@ -9,7 +9,7 @@ import {
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
-import Home2 from "./pages/Home2";
+// import Home2 from "./pages/Home2";
 import Search from "./pages/Search";
 import Cart from "./pages/Cart";
 import Register_interest from "./pages/Register_interest";
@@ -27,7 +27,7 @@ import QNA from "./pages/QNA";
 
 import Lecture_watch from "./pages/Lecture_watch";
 
-import Navbar from "./components/Navbar";
+import Navbar from "./components/Navbar2";
 import Footer from "./components/Footer";
 
 const Layout = () => {
@@ -66,10 +66,10 @@ const router = createBrowserRouter([
         path: "/api/",
         element: <Home />,
       },
-      {
-        path: "/api/2",
-        element: <Home2 />,
-      },
+      // {
+      //   path: "/api/2",
+      //   element: <Home2 />,
+      // },
       {
         path: "/modifyUser/userCheck",
         element: <ModifyUserCheck />,

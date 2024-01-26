@@ -459,45 +459,6 @@ form.search-container {
   background-color: white; /* 회색 배경색 추가 */
 }
 
-.actionBtn6 {
-  position: relative;
-  display: block;
-  width: 166px;
-  height: 40px;
-  margin: auto;
-  text-decoration: none;
-}
-.actionBtn6 .hover .txt {
-  display: block;
-  width: 160px;
-  color: #fff;
-  background-color: #ffffff;
-  text-align: center;
-  margin: 0 auto;
-  line-height: 34px;
-  font-size: 14px;
-  font-family: oswald;
-  text-transform: uppercase;
-}
-.actionBtn6 .hover:after {
-  display: block;
-  position: absolute;
-  top: -5px;
-  left: -2px;
-  content: "";
-  width: 100%;
-  height: 40px;
-  border: 2px solid #4c4c4d;
-  transition: transform 0.2s;
-  -webkit-transition: -webkit-transform 0.2s;
-  -moz-transition: -moz-transform 0.2s;
-}
-.actionBtn6:hover .hover:after {
-  transform: scale(1.06, 1.25);
-  -webkit-transform: scale(1.06, 1.25);
-  -moz-transform: scale(1.06, 1.25);
-}
-
 //
 $fuschia: #7a7c6c;
 $button-bg: $fuschia;

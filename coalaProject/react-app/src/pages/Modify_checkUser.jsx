@@ -1,7 +1,14 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import axios from "axios";
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Modify_checkUser = () => {
+  const [userCheckPassword, setUserCheckPassword] = useState("");
+
+  const handleUserCheckPassword = (event) => {
+    setUserCheckPassword(event.target.value);
+  };
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +30,27 @@ const Modify_checkUser = () => {
     }
   }, []);
 
+  const location = useLocation();
+
+  const currentUser = location.state?.currentUser || [];
+
   const handleButtonClick = () => {
+    try {
+      const res = axios.post(
+        `${serverUrl}/modifyUser/userCheck/?userNo=${currentUser.USER_NO}`,
+        { PASSWORD: userCheckPassword }
+      );
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 401) {
+          alert("비밀번호가 올바르지 않습니다."); // 401: Unauthorized
+        } else {
+          console.error("로그인 중 오류:", error.response.status);
+        }
+      } else {
+        console.error("로그인 중 오류:", error.message);
+      }
+    }
     setTimeout(() => {
       navigate("/modifyUser/information");
     }, 1000);
@@ -41,18 +68,19 @@ const Modify_checkUser = () => {
         }}
       >
         PASSWORD
-        <textarea
-          aria-label="minimum height"
+        <input
           type="password"
           placeholder="Enter your password"
           style={{
             marginRight: "10px",
             width: "200px",
             marginLeft: "5px",
-            textAlign: "center", // 텍스트 수평 가운데 정렬
-            border: "1px solid #ccc", // 테두리 스타일 추가
-            borderRadius: "8px", // 테두리의 둥글기 조절
+            textAlign: "center",
+            border: "1px solid #ccc",
+            borderRadius: "8px",
           }}
+          value={userCheckPassword}
+          onChange={handleUserCheckPassword}
         />
         <button
           className="bubbly-button"

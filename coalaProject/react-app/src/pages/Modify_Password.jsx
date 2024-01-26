@@ -41,7 +41,7 @@ const Modify_Password = () => {
               비밀번호 변경
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/information"
               style={{ textDecoration: "none", color: "inherit" }}
@@ -49,7 +49,7 @@ const Modify_Password = () => {
               내 정보 수정
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/interest"
               style={{ textDecoration: "none", color: "inherit" }}
@@ -57,12 +57,20 @@ const Modify_Password = () => {
               관심분야 수정
             </a>
           </li>
-          <li style={{ marginTop: "25%" }}>
+          <li style={{ marginTop: "20%" }}>
             <a
               href="/modifyUser/payment"
               style={{ textDecoration: "none", color: "inherit" }}
             >
               결제내역
+            </a>
+          </li>
+          <li style={{ marginTop: "20%" }}>
+            <a
+              href="/modifyUser/cart"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              장바구니
             </a>
           </li>
         </ul>

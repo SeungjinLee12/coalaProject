@@ -34,10 +34,6 @@ router.post("/userCheck", (req, res) => {
               .status(401)
               .json({ success: false, message: "비밀번호 불일치" });
           }
-        } else {
-          res
-            .status(404)
-            .json({ success: false, message: "사용자를 찾을 수 없음" });
         }
       } catch (error) {
         console.error(error);

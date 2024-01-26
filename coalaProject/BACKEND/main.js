@@ -1,3 +1,4 @@
+const cookieParser = require("cookie-parser");
 const http = require("http");
 const express = require("express");
 const app = express();
@@ -6,8 +7,15 @@ const db = require("./DB/db");
 const bodyParser = require("body-parser");
 const port = 4001;
 const cors = require("cors");
+
+const corsOptions = {
+  origin: "http://localhost:3000", // 클라이언트의 주소로 변경
+  credentials: true,
+};
+
 // CORS 설정
-app.use(cors());
+app.use(cors(corsOptions));
+app.use(cookieParser());
 
 const mainPage = require("./ROUTER/mainPageRouter");
 const login = require("./ROUTER/loginRouter");

@@ -1,10 +1,16 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import {
+  useNavigate,
+  useLocation,
+  Link,
+  useSearchParams,
+} from "react-router-dom";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
-const CourseCard = ({ imageSrc, title, description }) => {
+const CourseCard = ({ imageUrl, title, description }) => {
   return (
     <div className="card">
-      <img className="card-image" src={imageSrc} alt="Course Image" />
+      <img className="card-image" src={imageUrl} alt="Course Image" />
       <div className="back card-content">
         <div className="back_inner">
           <h2 className="card-title">{title}</h2>
@@ -17,24 +23,32 @@ const CourseCard = ({ imageSrc, title, description }) => {
 };
 
 const Search = () => {
-  const courses = [
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      description: "이승진",
-    },
-    // Add other courses in a similar format
-  ];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const myParam = searchParams.get("word");
+  const location = useLocation();
+  const searchResults = location.state?.searchResults || [];
+
+  // Extract status and research_res from searchResults
+  const { status, research_res } = searchResults;
 
   return (
     <div className="home">
-      <h1> "~~~~" 검색 결과</h1>
-      <div className="card-container">
-        {courses.map((course, index) => (
-          <CourseCard key={index} {...course} />
-        ))}
-      </div>
+      <h1 style={{ marginTop: "10px" }}>"{myParam}"에 대한 검색 결과</h1>
+
+      {status === "yes" ? (
+        <div className="card-container">
+          {research_res.map((course, index) => (
+            <CourseCard key={index} {...course} />
+          ))}
+        </div>
+      ) : (
+        <div
+          style={{ display: "flex", marginTop: "200px", marginLeft: "20px" }}
+        >
+          <h1>검색 결과가 없어요 ㅠ </h1>
+        </div>
+      )}
+      {/* <div className="horizontal-line" style={{ marginTop: "10px" }}></div> */}
     </div>
   );
 };

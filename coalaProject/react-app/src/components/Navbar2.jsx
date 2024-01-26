@@ -1,56 +1,126 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../img/logo.png";
+import React, { useState, useEffect, useContext } from "react"; // Keep only one import line
+import axios from "axios";
+import { AuthContexProvider, AuthContext } from "../context/authContext";
+import { useAuth } from "../context/authContext";
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Navbar = () => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      searchSearchTerm();
+    }
+  };
+
+  const [searchTerm, setsearchTerm] = useState("");
+
+  const searchSearchTerm = () => {
+    if (!searchTerm) {
+      return;
+    }
+    axios
+      .get(`${serverUrl}/api/research`, { params: { WORD: searchTerm } })
+      .then((res) => {
+        const searchResults = res.data;
+        const word = searchTerm;
+        navigate(`/api/search/?word=${word}`, {
+          state: {
+            searchResults,
+            word,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  ///////////////////////////////////////////////////////////////////////////////////////////
+  const { logout } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const [isCategoryOpen, setCategoryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSubCategoryOpen, setSubCategoryOpen] = useState(false);
+  const navigate = useNavigate();
+  const { categories, setCategories } = useAuth();
 
-  const dropdownItems = ["a", "b", "c", "d", "e", "f", "g"];
-
-  const subItems = {
-    a: ["자바", "파이썬"],
-    b: ["다른 항목1", "다른 항목2"],
-    c: [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "1",
-      "1",
-      "1",
-      "1",
-      "1",
-      "1",
-    ],
-    d: [
-      "p",
-      "h",
-      "m",
-      "7",
-      "k",
-      "d",
-      "d",
-      "e",
-      "g",
-      "f",
-      "c",
-      "d",
-      "a",
-      "s",
-      "d",
-    ],
-
-    // 다른 상위 항목들에 대한 하위 항목들을 추가할 수 있습니다.
+  const [dropdownItems, setDropdownItems] = useState([]);
+  const [generatedSubItems, setGeneratedSubItems] = useState({});
+  const handleLogout = async () => {
+    logout();
+    navigate("/login"); // "/"로 이동
   };
 
-  const handleCategoryHover = () => {
+  useEffect(() => {
+    axios.get(`${serverUrl}/api/`).then((res) => {
+      const topLevelCategories = res.data.category_list.filter(
+        (category) => category.parent_category === null
+      );
+
+      const topLevelCategoryNames = topLevelCategories.map(
+        (category) => category.category_name
+      );
+
+      setDropdownItems(topLevelCategoryNames);
+
+      // 동적으로 generatedSubItems 생성
+      const categoryMap = res.data.category_list.reduce((map, category) => {
+        const parentCategoryName = category.parent_category
+          ? res.data.category_list.find(
+              (c) => c.category_no === category.parent_category
+            ).category_name
+          : null;
+
+        if (!parentCategoryName) {
+          map[category.category_no] = { parent: null, children: [] };
+        } else {
+          if (!map[parentCategoryName]) {
+            map[parentCategoryName] = { parent: null, children: [] };
+          }
+          map[parentCategoryName].children.push(category.category_name);
+        }
+        return map;
+      }, {});
+
+      const generatedSubItems = {};
+      for (const categoryName in categoryMap) {
+        const categoryInfo = categoryMap[categoryName];
+        const parentKey = categoryName;
+        const children = categoryInfo.children;
+        generatedSubItems[parentKey] = children;
+      }
+
+      // setGeneratedSubItems를 호출하여 generatedSubItems 설정
+      setGeneratedSubItems(generatedSubItems);
+    });
+  }, []);
+  ///////////////////////////////////////////////////////////////////////////////////////
+  const searchSearchCategory = (item) => {
+    if (!item) {
+      return;
+    }
+    axios
+      .get(`${serverUrl}/api/research`, { params: { WORD: item } })
+      .then((res) => {
+        const searchResults = res.data;
+        const word = item;
+        navigate(`/api/search/?word=${word}`, {
+          state: {
+            searchResults,
+            word,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  ///////////////////////////////////////////////////////////////////////////////////////
+  const handleCategoryHover = (categoryName, categoryNo) => {
+    console.log("Hovered Category:", categoryName);
+    console.log("Category No:", categoryNo);
+
     setCategoryOpen(true);
   };
 
@@ -66,8 +136,18 @@ const Navbar = () => {
   const handleSubCategoryLeave = () => {
     setSubCategoryOpen(false);
   };
+  //////////////////////////////////////////////////////////////////////////////////////////
+  const myPageEnter = () => {
+    const userNo = currentUser.USER_NO;
+    navigate(`/modifyUser/userCheck/?userNo=${userNo}`, {
+      state: { currentUser },
+    });
+  };
 
   const generateDropdownItems = (items) => {
+    // console.log("dropdownItems : ", dropdownItems);
+    // console.log("generatedSubItems : ", generatedSubItems);
+
     return (
       <div
         style={{
@@ -86,9 +166,8 @@ const Navbar = () => {
             style={{
               position: "absolute",
               top: "100%",
-              left: 0,
+              left: "0", // 수정: 왼쪽 위치를 0으로 설정
               background: "#fff",
-              left: "-20px",
               boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
               zIndex: 1,
               width: "130px",
@@ -106,6 +185,7 @@ const Navbar = () => {
                     selectedCategory === item ? "#eee" : "transparent",
                 }}
                 onMouseEnter={() => setSelectedCategory(item)}
+                onClick={() => searchSearchCategory(item)}
               >
                 {item}
               </div>
@@ -114,8 +194,9 @@ const Navbar = () => {
               <div
                 style={{
                   position: "absolute",
-                  top: 0,
-                  left: "120px",
+                  top:
+                    items.findIndex((item) => item === selectedCategory) * 30, // 수정: 인덱스와 높이를 고려하여 top 설정
+                  left: "100%",
                   background: "#fff",
                   boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
                   zIndex: 1,
@@ -132,12 +213,9 @@ const Navbar = () => {
                         background: isSubCategoryOpen ? "#eee" : "transparent",
                       }}
                     >
-                      <Link
-                        to={`/category/${subItem.toLowerCase()}`}
-                        style={{ textDecoration: "none", color: "inherit" }}
-                      >
+                      <div onClick={() => searchSearchCategory(subItem)}>
                         {subItem}
-                      </Link>
+                      </div>
                     </div>
                   )
                 )}
@@ -150,7 +228,7 @@ const Navbar = () => {
   };
 
   const getSubDropdownItems = (item) => {
-    return subItems[item] || [];
+    return generatedSubItems[item] || [];
   };
 
   return (
@@ -163,7 +241,7 @@ const Navbar = () => {
           alignItems: "center",
         }}
       >
-        <a href="/" style={{ textDecoration: "none", color: "inherit" }}>
+        <a href="/api/" style={{ textDecoration: "none", color: "inherit" }}>
           <div
             className="logo-name"
             style={{ display: "flex", alignItems: "center" }}
@@ -188,31 +266,79 @@ const Navbar = () => {
         </div>
 
         <form className="search-container" style={{ marginRight: "0px" }}>
-          <input type="text" id="search-bar" placeholder="검색" />
-          <a href="#">
+          <input
+            type="text"
+            id="search-bar"
+            placeholder="검색"
+            value={searchTerm}
+            onChange={(e) => setsearchTerm(e.target.value)}
+          />
+          <button type="button" onKeyDown={handleKeyDown}>
             <img
               className="search-icon"
               src="http://www.endlessicons.com/wp-content/uploads/2012/12/search-icon.png"
               alt="Search Icon"
+              onClick={searchSearchTerm}
             />
-          </a>
+          </button>
         </form>
+        <div>
+          {currentUser !== null ? (
+            <div style={{ marginTop: "80px", marginLeft: "20px" }}>
+              <a
+                className="code_view actionBtn7"
+                style={{ marginBottom: "10px", marginRight: "0px" }}
+              >
+                <button
+                  onClick={myPageEnter}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  MyPage
+                </button>
+              </a>
 
-        <a
-          href="/modifyUser/userCheck"
-          class="code_view actionBtn7"
-          style={{ marginBottom: "10px", marginRight: "0px" }}
-        >
-          <h4 style={{ margin: 0 }}>MyPage</h4>
-        </a>
+              <a
+                className="code_view actionBtn7"
+                style={{ marginBottom: "10px", marginRight: "20px" }}
+              >
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Logout
+                </button>
+              </a>
+            </div>
+          ) : (
+            <div style={{ marginTop: "80px", marginLeft: "20px" }}>
+              <Link
+                to="/login"
+                className="code_view actionBtn7"
+                style={{ marginBottom: "10px", marginRight: "0px" }}
+              >
+                <h4 style={{ margin: 0 }}>LogIN</h4>
+              </Link>
 
-        <a
-          href="/modifyUser/cart"
-          class="code_view actionBtn7"
-          style={{ marginBottom: "10px", marginRight: "20px" }}
-        >
-          <h4 style={{ margin: 0 }}>Cart</h4>
-        </a>
+              <Link
+                to="/register"
+                className="code_view actionBtn7"
+                style={{ marginBottom: "10px", marginRight: "20px" }}
+              >
+                <h4 style={{ margin: 0 }}>Register</h4>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
       <div className="horizontal-line"></div>
     </div>
