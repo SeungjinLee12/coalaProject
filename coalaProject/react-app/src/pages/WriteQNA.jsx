@@ -1,42 +1,104 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
 import { styled } from "@mui/system";
 import Stack from "@mui/material/Stack";
 import { Button as BaseButton, buttonClasses } from "@mui/base/Button";
+import { AuthContexProvider, AuthContext } from "../context/authContext";
+import { useAuth } from "../context/authContext";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const WriteQNA = () => {
-  const data = {
-    lectureView: [
-      {
-        title: "JAVA",
-      },
-    ],
+  const { currentUser } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { state } = location;
+  const { lectureNo, lectureTitle } = state;
+  const [questionTitle, setQuestionTitle] = useState("");
+  const [questionContent, setQuestionContent] = useState("");
+
+  const handleQuestionTitle = (e) => {
+    setQuestionTitle(e.target.value);
+  };
+
+  const handleQuestionContent = (e) => {
+    setQuestionContent(e.target.value);
+  };
+
+  const handleSubmitButton = () => {
+    const userNo = currentUser.USER_NO;
+    if (questionTitle !== "" && questionContent !== "") {
+      axios
+        .post(`${serverUrl}/lecture/writeQNA`, {
+          TITLE: questionTitle,
+          userNo: userNo,
+          lectureNo: lectureNo,
+          QUESTION: questionContent,
+        })
+        .then((res) => {
+          console.log("dasfkjdsnfkjdsanfajkd", res.data.lectureNo1);
+          alert("질문이 작성되었습니다");
+          navigate(`/lecture/QNAList/?lectureNo=${res.data.lectureNo1}`, {
+            state: { lectureNo, lectureTitle },
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else if (questionTitle === "" || questionTitle === null) {
+      alert("제목을 작성해주세요");
+    } else if (questionContent === null || questionContent === "") {
+      alert("질문을 작성해주세요");
+    }
   };
 
   return (
     <div>
-      {data.lectureView.map((lecture, index) => (
-        <div key={index}>
-          <h1>강의 후기 - {lecture.title}</h1>
-        </div>
-      ))}
+      <div>
+        <h1>Question - {lectureTitle}</h1>
+      </div>
       <h3 style={{ marginTop: "20px" }}> 제목 :</h3>
-      <TextareaAutosize
-        aria-label="empty textarea"
-        style={{ marginTop: "5px" }}
+      <textarea
+        type="text"
+        style={{
+          marginTop: "5px",
+          border: "3px solid black",
+          width: "100%",
+          height: "50px",
+          padding: "10px",
+          boxSizing: "border-box",
+          whiteSpace: "normal", // 줄 바꿈을 하지 않음
+        }}
+        value={questionTitle}
+        onChange={handleQuestionTitle} // 입력된 값을 표시
       />
       <div style={{ marginTop: "10px" }}>
         <h3>질문 내용 :</h3>
       </div>
       <div>
-        <Textarea
-          aria-label="minimum height"
-          minRows={5}
-          style={{ marginTop: "5px" }}
+        <textarea
+          type="text"
+          style={{
+            marginTop: "5px",
+            border: "3px solid black",
+            width: "100%",
+            height: "300px",
+            padding: "10px",
+            boxSizing: "border-box",
+            whiteSpace: "normal", // 줄 바꿈을 하지 않음
+          }}
+          value={questionContent}
+          onChange={handleQuestionContent} // 입력된 값을 표시
         />
       </div>
       <div>
-        <Button type="submit" style={{ marginTop: "10px" }}>
+        <Button
+          type="submit"
+          style={{ marginTop: "10px" }}
+          onClick={handleSubmitButton}
+        >
           저장
         </Button>
       </div>

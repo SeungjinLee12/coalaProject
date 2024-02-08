@@ -35,25 +35,21 @@ const Modify_checkUser = () => {
   const currentUser = location.state?.currentUser || [];
 
   const handleButtonClick = () => {
-    try {
-      const res = axios.post(
+    axios
+      .post(
         `${serverUrl}/modifyUser/userCheck/?userNo=${currentUser.USER_NO}`,
         { PASSWORD: userCheckPassword }
-      );
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status === 401) {
-          alert("비밀번호가 올바르지 않습니다."); // 401: Unauthorized
+      )
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.success === true) {
+          setTimeout(() => {
+            navigate("/modifyUser/information");
+          }, 1000);
         } else {
-          console.error("로그인 중 오류:", error.response.status);
+          alert("비밀번호가 일치하지 않습니다.");
         }
-      } else {
-        console.error("로그인 중 오류:", error.message);
-      }
-    }
-    setTimeout(() => {
-      navigate("/modifyUser/information");
-    }, 1000);
+      });
   };
 
   return (

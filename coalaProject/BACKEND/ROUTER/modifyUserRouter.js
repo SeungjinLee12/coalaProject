@@ -31,7 +31,7 @@ router.post("/userCheck", (req, res) => {
             res.status(200).json({ success: true, message: "비밀번호 일치" });
           } else {
             res
-              .status(401)
+              .status(200)
               .json({ success: false, message: "비밀번호 불일치" });
           }
         }
@@ -47,7 +47,6 @@ router.post("/userCheck", (req, res) => {
 router.post("/information", (req, res) => {
   const name = req.body.NAME;
   const phone = req.body.PHONE;
-  const image = req.body.IMAGE;
   const userNo = req.query.userNo;
 
   db.query(
@@ -55,10 +54,9 @@ router.post("/information", (req, res) => {
     UPDATE USER
     SET
       PHONE = ?,
-      IMAGE = ?,
       NAME = ?
     WHERE USER_NO = ?;`,
-    [phone, image, name, userNo],
+    [phone, name, userNo],
     (err, rows) => {
       try {
         if (err) {
@@ -115,7 +113,7 @@ router.post("/password", async (req, res) => {
 // 유저 정보 수정 -> 장바구니 리스트
 router.get("/cart", (req, res) => {
   db.query(
-    `SELECT L.PRICE, L.TITLE, L.IMAGEURL
+    `SELECT L.PRICE, L.TITLE, L.IMAGEURL, C.CART_NO, C.LECTURE_NO
       FROM CART C
       JOIN LECTURE L ON C.LECTURE_NO = L.LECTURE_NO
       WHERE C.USER_NO = ?;`,
@@ -126,15 +124,34 @@ router.get("/cart", (req, res) => {
           throw err;
         }
         var update_cart = rows.map((row) => ({
+          cartNo: row.CART_NO,
           title: row.TITLE,
           imageUrl: row.IMAGEURL,
           price: row.PRICE,
+          lectureNo: row.LECTURE_NO,
         }));
         res.json(update_cart);
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: "서버 오류" });
       }
+    }
+  );
+});
+
+router.post("/deleteCart", (req, res) => {
+  const lectureNo = req.body.lectureNo;
+  const userNo = req.body.userNo;
+
+  db.query(
+    `DELETE FROM CART
+    WHERE USER_NO = ? && LECTURE_NO = ?;`,
+    [userNo, lectureNo],
+    (err, rows) => {
+      if (err) {
+        throw err;
+      }
+      res.sendStatus(200);
     }
   );
 });
@@ -171,11 +188,12 @@ router.get("/payment", (req, res) => {
 });
 
 // 유저 정보 수정 -> 관심과목
-router.get("/interest", (req, res) => {
-  const userNo = req.query.userNo;
+router.post("/interest", (req, res) => {
+  const userNo = req.body.userNo;
   const i1 = req.body.INTEREST1;
   const i2 = req.body.INTEREST2;
   const i3 = req.body.INTEREST3;
+  console.log(userNo, i1, i2, i3, "anfsdjknfajksnfjkdnj");
 
   db.query(
     `UPDATE USER

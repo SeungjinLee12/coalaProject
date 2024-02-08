@@ -4,8 +4,12 @@ import { AuthContext } from "../context/authContext";
 
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
+import KakaoLogin from "react-kakao-login";
 
 const serverUrl = process.env.REACT_APP_SERVER_URL;
+const restapiKey = process.env.REACT_APP_Rest_api_key;
+const redirectUri = process.env.REACT_APP_redirect_uri;
+const jsKey = process.env.REACT_APP_javascriptKey;
 
 const Login = () => {
   const { currentUser } = useContext(AuthContext);
@@ -19,6 +23,7 @@ const Login = () => {
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const userData = {
@@ -28,6 +33,32 @@ const Login = () => {
     await login(userData);
 
     navigate("/api"); // 로그인 성공 시 "/"로 이동
+  };
+
+  const kakaoOnSuccess = async (data) => {
+    console.log("@@@@@@@@@@@@@@@$$$$$$$$$$$$$$", data);
+    // const idToken = data.response.access_token;
+    // if (idToken) {
+    //   try {
+    //     const response = await axios.post(
+    //       `${serverUrl}/login/kakao/callback`,
+    //       {
+    //         idToken,
+    //       },
+    //       {
+    //         withCredentials: true,
+    //       }
+    //     );
+    //     console.log("response.data12: ", response.data);
+    //     login(response.data.UserEmail, response.data.Password);
+    //   } catch (error) {
+    //     console.log("error: ", error);
+    //   }
+    // }
+  };
+  const kakaoOnFailure = (error) => {
+    // window.location.href = "http://localhost:3000";
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", error);
   };
 
   return (
@@ -59,7 +90,20 @@ const Login = () => {
                 alt="Kakao Logo"
                 className="kakao-logo"
               />
-              <span>카카오 로그인</span>
+              <KakaoLogin
+                token={jsKey}
+                onSuccess={kakaoOnSuccess}
+                onFail={kakaoOnFailure}
+                style={{
+                  width: "80%",
+                  padding: "10px",
+                  backgroundColor: "#FAE100",
+                  color: "black",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              />
             </div>
             <span>
               회원이 아직 아니신가요? <Link to="/register">Register</Link>

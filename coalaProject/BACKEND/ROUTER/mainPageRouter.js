@@ -8,7 +8,7 @@ const router = require("express").Router();
 router.get("/", (req, res) => {
   try {
     db.query(
-      "SELECT STAR, IMAGEURL, TITLE , PRICE FROM LECTURE ORDER BY VIEW_CNT DESC, TITLE ASC;",
+      "SELECT LECTURE_NO, STAR, IMAGEURL, TITLE , PRICE FROM LECTURE ORDER BY VIEW_CNT DESC, TITLE ASC;",
       function (err, rows) {
         if (err) {
           console.error(err);
@@ -27,6 +27,7 @@ router.get("/", (req, res) => {
           imageSrc: row.IMAGEURL,
           star: row.STAR,
           price: row.PRICE,
+          lectureNo: row.LECTURE_NO,
         }));
 
         db.query(
@@ -73,7 +74,7 @@ router.post("/1", (req, res) => {
   db.query(
     `WITH table2 as (
         WITH table1 AS (
-            SELECT DISTINCT C.CATEGORY_NAME, C.CATEGORY_NO AS table1_category_no
+            SELECT DISTINCT CATEGORY_NO, C.CATEGORY_NAME, C.CATEGORY_NO AS table1_category_no
             FROM CATEGORY C
             WHERE C.CATEGORY_NO IN (
                 SELECT INTEREST1 FROM USER WHERE USER_NO = ${userNo}
@@ -82,7 +83,7 @@ router.post("/1", (req, res) => {
         SELECT t1.CATEGORY_NAME, t1.table1_category_no
         FROM table1 t1
     )
-    SELECT CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+    SELECT 1.LECTURE_NO, CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
     FROM LECTURECATEGORY lc
     JOIN table2 t2 ON lc.CATEGORY_NO = t2.table1_category_no
     JOIN LECTURE l ON lc.LECTURE_NO = l.LECTURE_NO;`,
@@ -101,6 +102,7 @@ router.post("/1", (req, res) => {
         interest1_star: row.STAR,
         interest1_imageUrl: row.IMAGEURL,
         interest1_view_cnt: row.view_cnt,
+        interest1_lectureNo: row.LECTURE_NO,
       }));
       db.query(
         `WITH table2 as (
@@ -114,7 +116,7 @@ router.post("/1", (req, res) => {
             SELECT t1.CATEGORY_NAME, t1.table1_category_no
             FROM table1 t1
         )
-        SELECT CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+        SELECT l.LECTURE_NO, CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
         FROM LECTURECATEGORY lc
         JOIN table2 t2 ON lc.CATEGORY_NO = t2.table1_category_no
         JOIN LECTURE l ON lc.LECTURE_NO = l.LECTURE_NO;`,
@@ -133,7 +135,9 @@ router.post("/1", (req, res) => {
             interest2_star: row.STAR,
             interest2_imageUrl: row.IMAGEURL,
             interest2_view_cnt: row.view_cnt,
+            interest2_lectureNo: row.LECTURE_NO,
           }));
+
           db.query(
             `WITH table2 as (
                 WITH table1 AS (
@@ -146,7 +150,7 @@ router.post("/1", (req, res) => {
                 SELECT t1.CATEGORY_NAME, t1.table1_category_no
                 FROM table1 t1
             )
-            SELECT CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+            SELECT l.LECTURE_NO, CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
             FROM LECTURECATEGORY lc
             JOIN table2 t2 ON lc.CATEGORY_NO = t2.table1_category_no
             JOIN LECTURE l ON lc.LECTURE_NO = l.LECTURE_NO;`,
@@ -165,10 +169,11 @@ router.post("/1", (req, res) => {
                 interest3_star: row.STAR,
                 interest3_imageUrl: row.IMAGEURL,
                 interest3_view_cnt: row.view_cnt,
+                interest3_lectureNo: row.LECTURE_NO,
               }));
 
               db.query(
-                `SELECT L.TITLE, S.STARTTIME, S.STUDYRATE, L.IMAGEURL
+                `SELECT L.TITLE, S.STARTTIME, S.STUDYRATE, L.IMAGEURL, L.LECTURE_NO, L.STAR
             FROM STUDY S
             JOIN LECTURE L ON S.LECTURE_NO = L.LECTURE_NO
             WHERE S.USER_NO = ?;`,
@@ -180,17 +185,19 @@ router.post("/1", (req, res) => {
                     return;
                   }
 
-                  if (rows.length === 0) {
-                    // 데이터가 없을 경우
-                    res.status(404).json({ message: "No data found" });
-                    return;
-                  }
+                  // if (rows.length === 0) {
+                  //   // 데이터가 없을 경우
+                  //   res.status(200).json({ message: "No data found" });
+                  //   return;
+                  // }
 
                   var userStudy = rows.map((row) => ({
+                    study_star: row.STAR,
                     study_title: row.TITLE,
                     study_startTime: row.STARTTIME,
                     study_studyRate: row.STUDYRATE,
                     study_imageUrl: row.IMAGEURL,
+                    study_lectureNo: row.LECTURE_NO,
                   }));
 
                   const resResult = {
@@ -200,7 +207,6 @@ router.post("/1", (req, res) => {
                     userStudyList: userStudy,
                   };
 
-                  // console.log(resResult);
                   res.json(resResult);
                 }
               );
@@ -218,32 +224,32 @@ router.get("/research", (req, res) => {
 
   db.query(
     `WITH table3 AS (
-          WITH table2 as (
-             WITH table1 as (
-                SELECT C.CATEGORY_NAME, C.CATEGORY_NO AS TEST_CATEGORY_NO, C.PARENT_CATEGORY
-                FROM CATEGORY C
-                WHERE LOWER(C.CATEGORY_NAME) LIKE LOWER(?)
-                UNION ALL
-                SELECT C1.CATEGORY_NAME, C1.CATEGORY_NO AS TEST_CATEGORY_NO, C1.PARENT_CATEGORY
-                FROM CATEGORY C1
-                JOIN CATEGORY C2 ON C1.PARENT_CATEGORY = C2.CATEGORY_NO
-                WHERE LOWER(C2.CATEGORY_NAME) LIKE LOWER(?)
-             )
-             SELECT *
-             FROM LECTURECATEGORY lc
-             JOIN table1 t ON lc.CATEGORY_NO = t.TEST_CATEGORY_NO
-          )
-          SELECT l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
-          FROM LECTURE l
-          JOIN table2 t2 ON l.LECTURE_NO = t2.LECTURE_NO
-          UNION ALL
-          SELECT l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
-          FROM LECTURE l
-          WHERE LOWER(l.TITLE) LIKE LOWER(?)
-       )
-       SELECT TITLE, PRICE, STAR, IMAGEURL
-       FROM table3
-       ORDER BY view_cnt DESC;
+      WITH table2 as (
+         WITH table1 as (
+            SELECT C.CATEGORY_NAME, C.CATEGORY_NO AS TEST_CATEGORY_NO, C.PARENT_CATEGORY
+            FROM CATEGORY C
+            WHERE LOWER(C.CATEGORY_NAME) LIKE LOWER(?)
+            UNION ALL
+            SELECT C1.CATEGORY_NAME, C1.CATEGORY_NO AS TEST_CATEGORY_NO, C1.PARENT_CATEGORY
+            FROM CATEGORY C1
+            JOIN CATEGORY C2 ON C1.PARENT_CATEGORY = C2.CATEGORY_NO
+            WHERE LOWER(C2.CATEGORY_NAME) LIKE LOWER(?)
+         )
+         SELECT *
+         FROM LECTURECATEGORY lc
+         JOIN table1 t ON lc.CATEGORY_NO = t.TEST_CATEGORY_NO
+      )
+      SELECT l.LECTURE_NO, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+      FROM LECTURE l
+      JOIN table2 t2 ON l.LECTURE_NO = t2.LECTURE_NO
+      UNION ALL
+      SELECT l.LECTURE_NO, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+      FROM LECTURE l
+      WHERE LOWER(l.TITLE) LIKE LOWER(?)
+   )
+   SELECT LECTURE_NO, TITLE, PRICE, STAR, IMAGEURL
+   FROM table3
+   ORDER BY view_cnt DESC;
        `,
     [`%${word}%`, `%${word}%`, `%${word}%`],
     function (err, rows) {
@@ -263,6 +269,7 @@ router.get("/research", (req, res) => {
         price: row.PRICE,
         star: row.STAR,
         imageUrl: row.IMAGEURL,
+        lectureNo: row.LECTURE_NO,
       }));
       console.log(research_res);
       res.status(202).json({ status: "yes", research_res });
@@ -281,7 +288,7 @@ router.get("/category", (req, res) => {
             JOIN LECTURECATEGORY LC ON C.CATEGORY_NO = LC.CATEGORY_NO
             WHERE LOWER(C.CATEGORY_NAME) LIKE LOWER(?)
             
-        )SELECT L.TITLE, L.IMAGEURL, L.STAR, L.PRICE
+        )SELECT L.TITLE, L.IMAGEURL, L.STAR, L.PRICE, L.LECTURE_NO
         FROM LECTURE L
         JOIN table1 T ON L.LECTURE_NO = T.table1_LECTURE_NO;
         `,

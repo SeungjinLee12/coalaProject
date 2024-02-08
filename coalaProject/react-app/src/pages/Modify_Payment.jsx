@@ -1,8 +1,17 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // axios 추가
+import { AuthContexProvider, AuthContext } from "../context/authContext";
+
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Modify_Payment = () => {
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+
+  const formatNumberWithCommas = (number) => {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
 
   useEffect(() => {
     var animateButton = function (e) {
@@ -28,44 +37,35 @@ const Modify_Payment = () => {
       navigate("/modifyUser/information");
     }, 1000);
   };
-  const courses = [
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      price: "10000",
-      starttime: "~~~~~~~~~~",
-    },
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      price: "10000",
-      starttime: "~~~~~~~~~~",
-    },
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      price: "10000",
-      starttime: "~~~~~~~~~~",
-    },
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      price: "10000",
-      starttime: "~~~~~~~~~~",
-    },
-    {
-      imageSrc:
-        "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-      title: "생활코딩 ! NODE.JS 노드제이에스 프로그래밍",
-      price: "10000",
-      starttime: "~~~~~~~~~~",
-    },
-    // Add other courses in a similar format
-  ];
+
+  const formatDate = (datetimeString) => {
+    const options = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(datetimeString).toLocaleString("ko-KR", options);
+  };
+
+  const [paymentData, setPaymentData] = useState([]);
+
+  useEffect(() => {
+    // 서버에서 장바구니 데이터를 가져오는 함수
+    const fetchCartData = async () => {
+      try {
+        const response = await axios.get(
+          `${serverUrl}/modifyUser/payment/?userNo=${currentUser.USER_NO}`
+        );
+        setPaymentData(response.data); // 받아온 데이터를 상태에 저장
+      } catch (error) {
+        console.error("결제내역 데이터를 불러오는 중 에러 발생:", error);
+      }
+    };
+
+    fetchCartData(); // 함수 호출
+  }, []);
 
   return (
     <div style={{ display: "flex" }}>
@@ -132,7 +132,7 @@ const Modify_Payment = () => {
       >
         <div style={{}}>
           <h1 style={{ marginLeft: "210px" }}>My Page - 결제 내역</h1>
-          {courses.map((course, index) => (
+          {paymentData.map((course, index) => (
             <div
               key={index}
               style={{
@@ -143,14 +143,14 @@ const Modify_Payment = () => {
               }}
             >
               <img
-                src={course.imageSrc}
+                src={course.imageUrl}
                 alt={course.title}
                 style={{ width: "100px", height: "100px", marginRight: "20px" }}
               />
               <div style={{ marginRight: "130px" }}>
                 <p>제목 : {course.title}</p>
-                <p>가격: {course.price}원</p>
-                <p>시작 시간: {course.starttime}</p>
+                <p>가격: {formatNumberWithCommas(course.price)}원</p>
+                <p>결제 시간: {formatDate(course.paymenttime)}</p>
               </div>
             </div>
           ))}

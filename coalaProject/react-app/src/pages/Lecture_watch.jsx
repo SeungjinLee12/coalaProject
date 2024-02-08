@@ -1,64 +1,92 @@
-import React, { useState } from "react";
-import Logo from "../img/logo.png";
-import { Button as BaseButton, buttonClasses } from "@mui/base/Button";
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/authContext";
+import FloatingLabel from "react-bootstrap/FloatingLabel";
+import { TextareaAutosize as BaseTextareaAutosize } from "@mui/base/TextareaAutosize";
 import { styled } from "@mui/system";
+import { Button as BaseButton, buttonClasses } from "@mui/base/Button";
 import Stack from "@mui/material/Stack";
+import axios from "axios";
+import Logo from "../img/logo.png";
+import VideoPlayer from "../components/VideoPlayer/VideoPlayer";
+
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Lecture_watch = () => {
-  const lectureData = {
-    lectureView: [
-      {
-        title: "JAVA",
-        period: "02:00:00",
-        imageUrl:
-          "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-        price: null,
-        star: null,
-        description: "Introduction to Programming",
-      },
-    ],
-    lectureTOC_list: [
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-      {
-        title: "Introduction",
-        TOC_description: "Overview of the course",
-      },
-
-      // ... (다른 TOC 항목들)
-    ],
-  };
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { state } = location;
+  const { lectureNo, lectureTitle, tocNo, lectureTOC_list, lectureInfo_list } =
+    state;
+  const { currentUser } = useContext(AuthContext);
 
   const [showTOC, setShowTOC] = useState(false);
+  const [selectedTOC, setSelectedTOC] = useState(tocNo);
+  const [selectedTOCList, setSelectedTOCList] = useState([]);
+  const [prevButtonCheck, setprevButtonCheck] = useState(false);
+  const [nextButtonCheck, setNextButtonCheck] = useState(false);
 
   const toggleTOC = () => {
+    console.log(
+      lectureNo,
+      lectureTitle,
+      tocNo,
+      lectureTOC_list,
+      lectureInfo_list,
+      "############",
+      selectedTOCList
+    );
     setShowTOC((prevShowTOC) => !prevShowTOC);
+  };
+
+  const handleTOCClick = (tocNo) => {
+    console.log(`TOC Clicked: ${tocNo}`);
+    setSelectedTOC(tocNo);
+  };
+
+  const handleBack = () => {
+    navigate(`/lecture/${lectureNo}`);
+  };
+
+  useEffect(() => {
+    let selectedTOCList = lectureInfo_list.find(
+      (lectureInfo_list) => lectureInfo_list.INFO_lectureTOC_NO === selectedTOC
+    );
+    if (selectedTOCList !== null) {
+      setSelectedTOCList(selectedTOCList);
+    }
+  }, [selectedTOC]);
+
+  const checkPrevButtonStatus = (c) => {
+    const checkPrevButton =
+      lectureInfo_list[0].INFO_lectureTOC_NO !== selectedTOC;
+    setprevButtonCheck(checkPrevButton);
+  };
+
+  const checkNextButtonStatus = (selectedTOC) => {
+    let a = lectureInfo_list.length - 1;
+    const checkNextButton =
+      lectureInfo_list[a].INFO_lectureTOC_NO !== selectedTOC;
+    setNextButtonCheck(checkNextButton);
+  };
+
+  useEffect(() => {
+    checkPrevButtonStatus(selectedTOC);
+    checkNextButtonStatus(selectedTOC);
+  }, [selectedTOC]);
+
+  const handleLectureQnA = () => {
+    navigate(`/lecture/QNAList/?lectureNo=${lectureNo}`, {
+      state: { lectureNo, lectureTitle },
+    });
+  };
+
+  const handleNextButton = (selectedTOC) => {
+    setSelectedTOC((selectedTOC) => selectedTOC + 1);
+  };
+
+  const handlePrevButton = (selectedTOC) => {
+    setSelectedTOC((selectedTOC) => selectedTOC - 1);
   };
 
   return (
@@ -89,18 +117,19 @@ const Lecture_watch = () => {
           alignItems: "center",
         }}
       >
-        {lectureData.lectureView.map((lecture, index) => (
-          <h1 key={index}>{lecture.title}</h1>
-        ))}
+        <h1>{lectureTitle}</h1>
         <div style={{ display: "flex", width: "80%" }}>
-          <div
+          <VideoPlayer
             style={{
               flex: 8,
               height: "400px",
               border: "2px solid #000",
               margin: "10px",
+              width: "600px",
             }}
-          ></div>
+            tocId={selectedTOCList.TOC_no}
+            src={selectedTOCList.videoUrl}
+          ></VideoPlayer>
 
           <div
             style={{
@@ -110,22 +139,30 @@ const Lecture_watch = () => {
               margin: "10px",
               display: "flex",
               flexDirection: "column",
+              width: "200px",
             }}
           >
-            <Button style={{ margin: "5px" }}>Q&A</Button>
+            <Button style={{ margin: "5px" }} onClick={handleLectureQnA}>
+              Q&A
+            </Button>
             <Button style={{ margin: "5px" }} onClick={toggleTOC}>
               목차
             </Button>
-
             {showTOC && (
               <ul style={{ marginLeft: "25px" }}>
-                {lectureData.lectureTOC_list.map((toc, index) => (
-                  <li key={index}>
-                    <strong>{toc.title}</strong>
+                {lectureTOC_list.map((toc, index) => (
+                  <li key={index} onClick={() => handleTOCClick(toc.tocNo)}>
+                    <strong>{toc.toc_title}</strong>
                   </li>
                 ))}
               </ul>
             )}
+            <Button
+              style={{ margin: "5px", marginTop: "auto" }}
+              onClick={handleBack}
+            >
+              강의화면으로 돌아가기
+            </Button>
           </div>
         </div>
         <div
@@ -136,17 +173,22 @@ const Lecture_watch = () => {
             marginLeft: "auto",
           }}
         >
-          <Button style={{ marginRight: "5px" }}> &lt; prev</Button>
-          <Button>next &gt;</Button>
-        </div>
-        <div style={{ marginTop: "20PX" }}>
-          {lectureData.lectureTOC_list.length > 0 && (
-            <h3>
-              이번 화 내용 :
-              ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ
-              {lectureData.lectureTOC_list[0].TOC_description}
-            </h3>
+          {prevButtonCheck && (
+            <Button
+              style={{ marginRight: "5px" }}
+              onClick={() => handlePrevButton(selectedTOC)}
+            >
+              &lt; prev
+            </Button>
           )}
+          {nextButtonCheck && (
+            <Button onClick={() => handleNextButton(selectedTOC)}>
+              next &gt;
+            </Button>
+          )}
+        </div>
+        <div style={{ marginTop: "80px", marginRight: "80%" }}>
+          <h3>이번 화 내용 :{selectedTOCList.INFO_description}</h3>
         </div>
       </div>
     </div>

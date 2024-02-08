@@ -1,8 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/authContext";
+
+import axios from "axios";
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Modify_Password = () => {
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMatch, setPasswordMatch] = useState(null);
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordMatch(newPassword === confirmPassword ? "green" : "red");
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setPasswordMatch(password === newConfirmPassword ? "green" : "red");
+  };
 
   useEffect(() => {
     var animateButton = function (e) {
@@ -23,10 +44,27 @@ const Modify_Password = () => {
     }
   }, []);
 
+  const isPasswordValid = (password) => {
+    // 비밀번호 길이 체크 (8자리 이상)
+    return password.length >= 8;
+  };
+
   const handleButtonClick = () => {
-    setTimeout(() => {
-      navigate("/modifyUser/information");
-    }, 1000);
+    const isValid = isPasswordValid(password);
+    if (passwordMatch !== "green") {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+    if (isValid) {
+      axios.post(
+        `${serverUrl}/modifyUser/password/?userNo=${currentUser.USER_NO}`,
+        { PASSWORD: password }
+      );
+      alert("비밀번호 수정이 완료되었습니다");
+      setTimeout(() => {
+        navigate("/api");
+      }, 1000);
+    }
   };
 
   return (
@@ -103,9 +141,11 @@ const Modify_Password = () => {
             }}
           >
             PASSWORD
-            <textarea
-              aria-label="minimum height"
-              placeholder="Enter your password"
+            <input
+              type="password"
+              value={password}
+              onChange={handlePasswordChange}
+              placeholder="   8자리 이상 비밀번호"
               style={{
                 marginRight: "10px",
                 marginLeft: "10px",
@@ -114,6 +154,7 @@ const Modify_Password = () => {
                 paddingRight: "15px",
                 border: "1px solid #ccc", // 테두리 스타일 추가
                 borderRadius: "8px", // 테두리의 둥글기 조절
+                height: "30px",
               }}
             />
           </div>
@@ -125,9 +166,11 @@ const Modify_Password = () => {
               marginLeft: "60px",
             }}
           >
-            <textarea
-              aria-label="minimum height"
-              placeholder="Re-enter your password"
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              placeholder="   Re-enter your password"
               style={{
                 marginRight: "10px",
                 marginLeft: "102px",
@@ -136,9 +179,36 @@ const Modify_Password = () => {
                 paddingRight: "15px",
                 border: "1px solid #ccc", // 테두리 스타일 추가
                 borderRadius: "8px", // 테두리의 둥글기 조절
+                height: "30px",
               }}
             />
           </div>
+          {passwordMatch === "green" && (
+            <p
+              style={{
+                color: "green",
+                marginLeft: "80px",
+                width: "100%",
+                paddingLeft: "100px",
+                paddingTop: "10px",
+              }}
+            >
+              비밀번호가 일치합니다
+            </p>
+          )}
+          {passwordMatch === "red" && (
+            <p
+              style={{
+                color: "red",
+                marginLeft: "65px",
+                width: "200%",
+                paddingLeft: "100px",
+                paddingTop: "10px",
+              }}
+            >
+              비밀번호가 일치하지 않습니다
+            </p>
+          )}
           <button
             className="bubbly-button"
             onClick={handleButtonClick}

@@ -1,9 +1,11 @@
+// const smtpTransport = require("../config/email");
 const db = require("../DB/db");
 const bodyParser = require("body-parser");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 
 // /login
 
@@ -221,6 +223,63 @@ router.post("/join_user", async (req, res) => {
   );
 });
 
+router.get("/join/interest/check", (req, res) => {
+  const INTEREST1 = req.query.INTEREST1;
+  const INTEREST2 = req.query.INTEREST2;
+  const INTEREST3 = req.query.INTEREST3;
+
+  const categoryNos = [];
+
+  db.query(
+    "SELECT CATEGORY_NO FROM CATEGORY WHERE CATEGORY_NAME = ? LIMIT 1;",
+    [INTEREST1],
+    (err, rows1) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+        return;
+      }
+
+      if (rows1.length > 0) {
+        categoryNos.push(rows1[0].CATEGORY_NO);
+      }
+
+      db.query(
+        "SELECT CATEGORY_NO FROM CATEGORY WHERE CATEGORY_NAME = ? LIMIT 1;",
+        [INTEREST2],
+        (err, rows2) => {
+          if (err) {
+            console.error(err);
+            res.status(500).json({ error: "Internal Server Error" });
+            return;
+          }
+          if (rows2.length > 0) {
+            categoryNos.push(rows2[0].CATEGORY_NO);
+          }
+
+          db.query(
+            "SELECT CATEGORY_NO FROM CATEGORY WHERE CATEGORY_NAME = ? LIMIT 1;",
+            [INTEREST3],
+            (err, rows3) => {
+              if (err) {
+                console.error(err);
+                res.status(500).json({ error: "Internal Server Error" });
+                return;
+              }
+              if (rows3.length > 0) {
+                categoryNos.push(rows3[0].CATEGORY_NO);
+              }
+
+              // 모든 처리가 끝나면 결과를 응답
+              res.json({ categoryNos });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
 router.get("/join/interest", (req, res) => {
   try {
     db.query(
@@ -244,9 +303,6 @@ router.get("/join/interest", (req, res) => {
           parent_category: row.PARENT_CATEGORY,
         }));
 
-        // const resResult = {
-        //   category_list: category,
-        // };
         res.json(category);
       }
     );
@@ -254,6 +310,166 @@ router.get("/join/interest", (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+// router.post('/kakao/callback', async function(req, res) {
+//   const access_token = req.body.idToken;
+//   console.log("access_token", access_token);
+//   let UserEmail = "";
+//   let Password = "";
+//   let UserName = "";
+//   let UserCellPhone = "";
+//   let UserNickname = "";
+//   let ProfileImage = "";
+//   if (access_token != null && access_token) {
+//     const profileUrl = "https://kapi.kakao.com/v2/user/me";
+//     try {
+//       const profileResponse = await axios.get(profileUrl, {
+//         headers: {
+//           Authorization: `Bearer ${access_token}`,
+//         },
+//       });
+//       Password = profileResponse.data.id.toString();
+//       PasswordCheck = profileResponse.data.id.toString();
+//       UserEmail = profileResponse.data.kakao_account.email;
+//       UserName = profileResponse.data.kakao_account.profile.nickname;
+//       UserCellPhone =
+//         "0" +
+//         profileResponse.data.kakao_account.phone_number.replace(
+//           /[\s+\-+]|82/g,
+//           ""
+//         );
+//       UserNickname = profileResponse.data.kakao_account.profile.nickname;
+//       ProfileImage = profileResponse.data.kakao_account.profile.profile_image_url;
+//       mysql.getConnection((error, conn) => {
+//         if (error) {
+//           console.log(error);
+//           res.status(500).json({ error: "내부 서버 오류" });
+//           return;
+//         }
+//         conn.query(
+//           "SELECT UserEmail, Password FROM users WHERE UserEmail = ?",
+//           [UserEmail],
+//           async (err, result) => {
+//             console.log("result12", result);
+//             if (err) {
+//               console.log(err);
+//               res.status(500).json({ error: "내부 서버 오류" });
+//               return;
+//             }
+//             if (result.length === 0) {
+//               // 비밀번호 해싱
+//               const hashedPassword = await bcrypt.hash(Password, 10);
+//               console.log("hashedPassword", hashedPassword);
+//               conn.query(
+//                 "INSERT INTO users (UserEmail, UserName, UserCellPhone, Password, ProfileImage, UserNickname) VALUES (?, ?, ?, ?, ?, ?)",
+//                 [UserEmail, UserName, UserCellPhone, hashedPassword, ProfileImage, UserNickname],
+//                 (err, result) => {
+//                   if (err) {
+//                     console.log(err);
+//                     res.status(500).json({ error: "내부 서버 오류" });
+//                     return;
+//                   }
+//                 }
+//               );
+//             }
+//             res.send({
+//               UserEmail,
+//               Password,
+//             });
+//             conn.release();
+//           }
+//         );
+//       });
+//     } catch (error) {
+//       console.error("프로필 요청 중 에러 발생:", error);
+//       res.status(500).send("프로필 요청 중에 오류가 발생했습니다.");
+//     }
+//   } else {
+//     console.error("액세스 토큰이 없습니다.");
+//     res.status(400).send("액세스 토큰이 없습니다.");
+//   }
+// });
+
+// router.post("/email", (req, res) => {
+//   var generateRandomNumber = function (min, max) {
+//     var randNum = Math.floor(Math.random() * (max - min + 1)) + min;
+//     return randNum;
+//   };
+
+//   const emailAuth = async (req, res) => {
+//     const number = generateRandomNumber(111111, 999999);
+
+//     const email = req.body.EMAIL;
+//     console.log(number, "$$$$$$$$$$$$$$$$$$$$$", email);
+
+//     const mailOptions = {
+//       from: "rntmdwlsrmf@gmail.com ", // 발신자 이메일 주소.
+//       to: email, //사용자가 입력한 이메일 -> 목적지 주소 이메일
+//       subject: " 인증 관련 메일 입니다. ",
+//       html: "<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>" + number,
+//     };
+//     smtpTransport.sendMail(mailOptions, (err, response) => {
+//       console.log("response", response);
+//       //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
+//       if (err) {
+//         res.json({ ok: false, msg: " 메일 전송에 실패하였습니다. " });
+//         smtpTransport.close(); //전송종료
+//         return;
+//       } else {
+//         res.json({
+//           ok: true,
+//           msg: " 메일 전송에 성공하였습니다. ",
+//           authNum: number,
+//         });
+//         smtpTransport.close(); //전송종료
+//         return;
+//       }
+//     });
+//   };
+//   emailAuth(req, res);
+// });
+
+router.post("/email", (req, res) => {
+  var generateRandomNumber = function (min, max) {
+    var randNum = Math.floor(Math.random() * (max - min + 1)) + min;
+    return randNum;
+  };
+
+  const number = generateRandomNumber(111111, 999999);
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "rntmdwlsrmf@gmail.com",
+      pass: "lrvt jqjp qabs xjje",
+    },
+  });
+
+  const email = req.body.EMAIL;
+
+  const mailOptions = {
+    from: "rntmdwlsrmf@gmail.com ", // 발신자 이메일 주소.
+    to: email, //사용자가 입력한 이메일 -> 목적지 주소 이메일
+    subject: " 인증 관련 메일 입니다. ",
+    html: "<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>" + number,
+  };
+  transporter.sendMail(mailOptions, (error, response) => {
+    //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
+    if (error) {
+      res.json({ ok: false, msg: " 메일 전송에 실패하였습니다. " });
+      smtpTransport.close(); //전송종료
+      return;
+    } else {
+      res.json({
+        ok: true,
+        msg: " 메일 전송에 성공하였습니다. ",
+        authNum: number,
+      });
+      smtpTransport.close(); //전송종료
+      return;
+    }
+  });
 });
 
 module.exports = router;

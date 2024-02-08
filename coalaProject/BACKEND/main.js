@@ -16,6 +16,7 @@ const corsOptions = {
 // CORS 설정
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(express.static("public"));
 
 const mainPage = require("./ROUTER/mainPageRouter");
 const login = require("./ROUTER/loginRouter");

@@ -1,8 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../img/coalabenner.jpg";
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
 import { AuthContext } from "../context/authContext";
+import axios from "axios";
 
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
@@ -25,8 +25,9 @@ const addCommasToPrice = (price) => {
   return formattedPrice;
 };
 
-const CourseCard = ({ imageSrc, title, price, star }) => {
+const CourseCard = ({ imageSrc, title, price, star, lectureNo }) => {
   const formattedPrice = addCommasToPrice(price);
+  const navigate = useNavigate();
 
   const createEmptyStars = () => {
     const stars = [];
@@ -48,6 +49,11 @@ const CourseCard = ({ imageSrc, title, price, star }) => {
     }
     return stars;
   };
+
+  const handleButtonClick = () => {
+    navigate(`/lecture/${lectureNo}`);
+  };
+
   return (
     <div className="card box actionImg8" style={{}}>
       <img
@@ -59,14 +65,20 @@ const CourseCard = ({ imageSrc, title, price, star }) => {
       <div className="card-content back">
         <div className="back_inner">
           <h2 className="card-title">{title}</h2>
-          <br />
-          {star !== undefined ? createFilledStars(star) : createEmptyStars()}
+          <div style={{ display: "flex" }}>
+            <br />
+            {star !== undefined
+              ? createFilledStars(star)
+              : createEmptyStars()}{" "}
+            <h6 style={{ marginTop: "5px", marginLeft: "3px" }}>({star}점)</h6>
+          </div>
           <br />
           <h6>{formattedPrice}원</h6>
         </div>
         <button
           className="card-button"
           style={{ marginBottom: "5px", marginLeft: "5px" }}
+          onClick={handleButtonClick}
         >
           Learn More
         </button>
@@ -100,8 +112,9 @@ const Home = () => {
   useEffect(() => {
     // currentUser가 null이 아닐 때에만 실행
     if (currentUser !== null) {
+      const userNo = currentUser.USER_NO;
       axios
-        .post(`${serverUrl}/api/1`, { userNo: currentUser.USER_NO })
+        .post(`${serverUrl}/api/1`, { userNo: userNo })
         .then((res) => {
           const {
             userInterest1List,
@@ -114,9 +127,6 @@ const Home = () => {
           setUserInterest2List(userInterest2List);
           setUserInterest3List(userInterest3List);
           setUserStudyList(userStudyList);
-          console.log("userStudyList", userStudyList);
-
-          // setStudyLectures(res.data.mainpage_lecture_list);
         })
         .catch((error) => {
           console.error(error);
@@ -126,8 +136,6 @@ const Home = () => {
   }, [currentUser]);
 
   const handleToggleInterest = (categoryTitle) => {
-    console.log("*************************", categoryTitle);
-
     axios
       .get(`${serverUrl}/api/research`, { params: { WORD: categoryTitle } })
       .then((res) => {
@@ -183,7 +191,8 @@ const Home = () => {
                       key={studyIndex}
                       imageSrc={study.study_imageUrl}
                       title={study.study_title}
-                      // price={}
+                      lectureNo={study.study_lectureNo}
+                      star={study.study_star}
                     />
                   ))}
               </div>
@@ -227,6 +236,8 @@ const Home = () => {
                       imageSrc={interest[`interest${index + 1}_imageUrl`]}
                       title={interest[`interest${index + 1}_title`]}
                       price={interest[`interest${index + 1}_price`]}
+                      lectureNo={interest[`interest${index + 1}_lectureNo`]}
+                      star={interest[`interest${index + 1}_star`]}
                     />
                   ))}
                 </div>

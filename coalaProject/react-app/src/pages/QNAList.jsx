@@ -1,101 +1,62 @@
-import React from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button as BaseButton, buttonClasses } from "@mui/base/Button";
 import { styled } from "@mui/system";
 import Stack from "@mui/material/Stack";
+import axios from "axios";
+import WriteQNA from "./WriteQNA";
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const QNAList = () => {
-  const lectureData = {
-    lectureView: [
-      {
-        title: "JAVA",
-        period: "02:00:00",
-        imageUrl:
-          "https://storage.googleapis.com/static.fastcampus.co.kr/prod/uploads/202311/004546-476/react.png",
-        price: null,
-        star: null,
-        description: "Introduction to Programming",
-      },
-    ],
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { state } = location;
+  const { lectureNo, lectureTitle } = state;
+  const [QNAList, setQNAList] = useState([]);
+
+  const reversedQuestions = [...QNAList].reverse();
+
+  useEffect(() => {
+    axios
+      .get(`${serverUrl}/lecture/QNAList/?LectureNo=${lectureNo}`)
+      .then((res) => {
+        console.log(lectureNo);
+        setQNAList(res.data);
+      });
+  }, []);
+  const WriteQ = () => {
+    navigate(`/lecture/writeQNA/?lectureNo=${lectureNo}`, {
+      state: { lectureNo, lectureTitle },
+    });
   };
 
-  const questions = [
-    {
-      questionTitle: "test1231231231231",
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    // ... (다른 질문들)
-    {
-      questionTitle: "test1231231231231",
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-    {
-      questionTitle: null,
-      userName: "이승진123",
-      lecture_title: "JAVA",
-    },
-  ];
+  const formatDate = (datetimeString) => {
+    const options = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(datetimeString).toLocaleString("ko-KR", options);
+  };
 
-  const reversedQuestions = [...questions].reverse();
+  const handleClick = (questionNo, userName, inserttime, questionTitle) => {
+    navigate(`/lecture/QNA/?lectureNo=${lectureNo}&questionNo=${questionNo}`, {
+      state: {
+        lectureNo,
+        lectureTitle,
+        userName,
+        inserttime,
+        questionNo,
+        questionTitle,
+      },
+    });
+  };
 
   return (
     <div style={{ marginTop: "20px" }}>
-      {lectureData.lectureView.map((lecture, index) => (
-        <h1 key={index} style={{ marginLeft: "20px" }}>
-          Q&A - {lecture.title}
-        </h1>
-      ))}
+      <h1 style={{ marginLeft: "20px" }}>Q&A - {lectureTitle}</h1>
 
       <table
         style={{
@@ -116,29 +77,59 @@ const QNAList = () => {
             >
               No.
             </th>
-            <th style={{ border: "1px solid #ddd", padding: "8px", width: "" }}>
-              Name
+            <th
+              style={{
+                border: "1px solid #ddd",
+                padding: "8px",
+                width: "200px",
+              }}
+            >
+              작성자
             </th>
             <th style={{ border: "1px solid #ddd", padding: "8px" }}>Title</th>
+            <th
+              style={{
+                border: "1px solid #ddd",
+                padding: "8px",
+                width: "200px",
+              }}
+            >
+              작성시간
+            </th>
           </tr>
         </thead>
         <tbody>
-          {reversedQuestions.map((question, index) => (
+          {reversedQuestions.map((QNAList, index) => (
             <tr key={index}>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                {questions.length - index}
+                {reversedQuestions.length - index}
               </td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                {question.userName}
+                {QNAList.userName}
+              </td>
+              <td
+                style={{ border: "1px solid #ddd", padding: "8px" }}
+                onClick={() =>
+                  handleClick(
+                    QNAList.questionNo,
+                    QNAList.userName,
+                    QNAList.inserttime,
+                    QNAList.questionTitle
+                  )
+                }
+              >
+                {QNAList.questionTitle}
               </td>
               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                {formatDate(question.questionTitle)}{" "}
+                {formatDate(QNAList.inserttime)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <Button style={{ marginLeft: "93%", marginTop: "20px" }}>Q&A작성</Button>
+      <Button style={{ marginLeft: "93%", marginTop: "20px" }} onClick={WriteQ}>
+        Q&A작성
+      </Button>
     </div>
   );
 };

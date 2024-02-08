@@ -1,16 +1,162 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import kki from "../img/kakao.png";
 import axios from "axios";
+import kki from "../img/kakao.png";
 
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Register = () => {
-  ///////////////////////버튼//////////////////////////////////
   const [phoneNumber, setPhoneNumber] = useState("");
   const [birth, setBirth] = useState("");
-
+  const [email, setEmail] = useState(""); // 이메일 상태 추가
+  const [emailMessage, setEmailMessage] = useState("중복체크를 해주세요"); // 초기 메시지 설정
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMatch, setPasswordMatch] = useState(null);
+  const [nickname, setNickname] = useState(""); // 닉네임 상태 추가
+  const [nicknameMessage, setNicknameMessage] = useState("중복체크를 해주세요"); // 초기 메시지 설정
   const [categoryData, setCategoryData] = useState(null);
+  const [authNum, setAuthNum] = useState("");
+  const [randNum, setRandNum] = useState("");
+
+  const [confirmNum, setConfirmNum] = useState(false);
+  const [showAdditionalInput, setShowAdditionalInput] = useState(false); // 추가적인 입력 상자의 표시 여부 상태 추가
+  const [timer, setTimer] = useState(300); // 5분 타이머 상태 추가 (초 단위)
+  const [isTimerRunning, setIsTimerRunning] = useState(false); // 타이머가 실행 중인지 여부를 나타내는 상태 추가
+
+  ///////////////////////이메일중복체크//////////////////////////////////
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value); // email 상태 업데이트
+    setEmailMessage("중복체크를 해주세요"); // 이메일이 변경되면 초기 메시지로 설정
+    setIsTimerRunning(false);
+    setShowAdditionalInput(false); // 타이머가 0이 되면 추가적인 입력 상자 숨기기
+    setTimer(300);
+    setAuthNum("");
+  };
+
+  const handleAuthNumChange = (e) => {
+    setAuthNum(e.target.value);
+  };
+
+  const handleEmailCheck = () => {
+    axios
+      .post(`${serverUrl}/login/join/emailCheck`, { EMAIL: email })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status === "duplicate") {
+          setEmailMessage({ text: res.data.message, color: "red" });
+        } else if (res.data.status === "invalid") {
+          setEmailMessage({ text: res.data.message, color: "red" });
+        } else if (res.data.status === "available") {
+          setEmailMessage({ text: res.data.message, color: "green" });
+          alert("해당 이메일로 인증번호가 발송되었습니다");
+          setShowAdditionalInput(true); // 이메일 중복 확인 후 추가적인 입력 상자 표시
+          setIsTimerRunning(true);
+          axios
+            .post(`${serverUrl}/login/email`, { EMAIL: email })
+            .then((res) => {
+              console.log(res.data.authNum);
+              setRandNum(res.data.authNum);
+            });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  //////////////////////////////////이메일인증////////////////////////////////
+
+  useEffect(() => {
+    let intervalId;
+
+    if (isTimerRunning) {
+      intervalId = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer < 1) {
+            alert("제한시간이 초과되었습니다. 이메일인증을 다시 받으세요");
+            clearInterval(intervalId);
+            setIsTimerRunning(false);
+            setShowAdditionalInput(false); // 타이머가 0이 되면 추가적인 입력 상자 숨기기
+            setTimer(300);
+            setAuthNum("");
+          }
+          return prevTimer - 1; // 1초씩 감소
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(intervalId); // 컴포넌트가 언마운트될 때 타이머 제거
+  }, [isTimerRunning]);
+
+  const handleAuthNumCheck = () => {
+    if (authNum == randNum) {
+      setIsTimerRunning(false);
+      setShowAdditionalInput(false); // 타이머가 0이 되면 추가적인 입력 상자 숨기기
+      setTimer(300);
+      setEmailMessage({ text: "이메일 인증 완료", color: "green" });
+      setAuthNum("");
+    } else {
+      alert("인증번호가 틀렸습니다. 이메일 인증을 다시 해주세요.");
+      setIsTimerRunning(false);
+      setShowAdditionalInput(false); // 타이머가 0이 되면 추가적인 입력 상자 숨기기
+      setTimer(300);
+      setAuthNum("");
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedMinutes = String(minutes).padStart(2, "0"); // 두 자리로 맞추기 위해 0으로 채우기
+    const formattedSeconds = String(remainingSeconds).padStart(2, "0");
+    return `${formattedMinutes}:${formattedSeconds}`;
+  };
+
+  ///////////////////////비밀번호 일치 확인//////////////////////////////////
+
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    setPasswordMatch(newPassword === confirmPassword ? "green" : "red");
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    const newConfirmPassword = e.target.value;
+    setConfirmPassword(newConfirmPassword);
+    setPasswordMatch(password === newConfirmPassword ? "green" : "red");
+  };
+  /////////////////////////////////////////////////////////////////////////
+
+  const handleNicknameChange = (e) => {
+    setNickname(e.target.value); // nickname 상태 업데이트
+    setNicknameMessage("중복체크를 해주세요"); // 이메일이 변경되면 초기 메시지로 설정
+  };
+
+  const handleNicknameCheck = () => {
+    axios
+      .post(`${serverUrl}/login/join/nameCheck`, { NAME: nickname })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status === "duplicate") {
+          setNicknameMessage({ text: res.data.message, color: "red" });
+        } else if (res.data.status === "invalid") {
+          setNicknameMessage({ text: res.data.message, color: "red" });
+        } else if (res.data.status === "available") {
+          setNicknameMessage({ text: res.data.message, color: "green" });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  useEffect(() => {
+    console.log(nicknameMessage); // 상태 업데이트 후의 값 확인
+  }, [nicknameMessage]);
+
+  ///////////////////////버튼//////////////////////////////////
 
   const isEmailValid = (email) => {
     // 이메일 형식 체크
@@ -51,6 +197,9 @@ const Register = () => {
     if (emailMessage.color !== "green") {
       alert("이메일 중복 체크를 해주세요.");
       return;
+    } else if (emailMessage.text === "사용 가능한 이메일입니다.") {
+      alert("이메일 인증을 해주세요.");
+      return;
     }
 
     // 비밀번호 일치 확인
@@ -72,7 +221,6 @@ const Register = () => {
             password,
             nickname,
             phoneNumber,
-            categoryData,
             birth,
           },
         });
@@ -85,8 +233,8 @@ const Register = () => {
   useEffect(() => {
     axios.get(`http://localhost:4001/login/join/interest`).then((res) => {
       setCategoryData(res.data);
-    });
-  }, []);
+    }, []);
+  });
 
   const navigate = useNavigate();
 
@@ -105,85 +253,8 @@ const Register = () => {
       bubblyButtons[i].addEventListener("click", animateButton, false);
     }
   }, []);
-  ///////////////////////이메일중복체크//////////////////////////////////
 
-  const [email, setEmail] = useState(""); // 이메일 상태 추가
-  const [emailMessage, setEmailMessage] = useState("중복체크를 해주세요"); // 초기 메시지 설정
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value); // email 상태 업데이트
-    setEmailMessage("중복체크를 해주세요"); // 이메일이 변경되면 초기 메시지로 설정
-    console.log(emailMessage); // 추가
-  };
-
-  const handleEmailCheck = () => {
-    axios
-      .post(`${serverUrl}/login/join/emailCheck`, { EMAIL: email })
-      .then((res) => {
-        console.log(res.data);
-        if (res.data.status === "duplicate") {
-          setEmailMessage({ text: res.data.message, color: "red" });
-        } else if (res.data.status === "available") {
-          setEmailMessage({ text: res.data.message, color: "green" });
-        } else if (res.data.status === "invalid") {
-          setEmailMessage({ text: res.data.message, color: "red" });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-  ///////////////////////비밀번호 일치 확인//////////////////////////////////
-
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMatch, setPasswordMatch] = useState(null);
-
-  const handlePasswordChange = (e) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    // Check if passwords match when the user types
-    setPasswordMatch(newPassword === confirmPassword ? "green" : "red");
-  };
-
-  const handleConfirmPasswordChange = (e) => {
-    const newConfirmPassword = e.target.value;
-    setConfirmPassword(newConfirmPassword);
-    // Check if passwords match when the user types
-    setPasswordMatch(password === newConfirmPassword ? "green" : "red");
-  };
-  /////////////////////////////////////////////////////////////////////////
-
-  const [nickname, setNickname] = useState(""); // 닉네임 상태 추가
-  const [nicknameMessage, setNicknameMessage] = useState("중복체크를 해주세요"); // 초기 메시지 설정
-
-  const handleNicknameChange = (e) => {
-    setNickname(e.target.value); // nickname 상태 업데이트
-    setNicknameMessage("중복체크를 해주세요"); // 이메일이 변경되면 초기 메시지로 설정
-    console.log(emailMessage); // 추가
-  };
-
-  const handleNicknameCheck = () => {
-    axios
-      .post(`${serverUrl}/login/join/nameCheck`, { NAME: nickname })
-      .then((res) => {
-        console.log(res.data);
-        if (res.data.status === "duplicate") {
-          setNicknameMessage({ text: res.data.message, color: "red" });
-        } else if (res.data.status === "available") {
-          setNicknameMessage({ text: res.data.message, color: "green" });
-        } else if (res.data.status === "invalid") {
-          setNicknameMessage({ text: res.data.message, color: "red" });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-
-  useEffect(() => {
-    console.log(nicknameMessage); // 상태 업데이트 후의 값 확인
-  }, [nicknameMessage]);
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <div
@@ -194,12 +265,12 @@ const Register = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "800px",
+        height: "900px",
       }}
     >
       <div
         className="auth-container-register"
-        style={{ maxWidth: "500px", width: "100%", height: "680px" }}
+        style={{ maxWidth: "500px", width: "100%", height: "750px" }}
       >
         <div className="auth">
           <h1 style={{ color: "black", marginTop: "70px" }}>Register</h1>
@@ -262,6 +333,63 @@ const Register = () => {
               >
                 {emailMessage.text}
               </p>
+              {emailMessage.color === "green" &&
+                showAdditionalInput === true && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      marginBottom: "10px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "flex",
+                        marginLeft: "-47px",
+                        alignItems: "center",
+                        width: "500%",
+                      }}
+                    >
+                      인증번호
+                      <input
+                        type="text"
+                        placeholder="Additional information"
+                        style={{
+                          marginRight: "10px",
+                          marginLeft: "5px",
+                          alignItems: "center",
+                        }}
+                        value={authNum}
+                        onChange={handleAuthNumChange} // 입력된 값을 표시
+                      />
+                      <button
+                        type="button"
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                          height: "30px",
+                          width: "30px",
+                          backgroundColor: "whitesmoke",
+                          borderColor: "black",
+                        }}
+                        onClick={handleAuthNumCheck}
+                      >
+                        <p
+                          style={{
+                            color: "black",
+                            fontWeight: "bold",
+                            fontSize: "1.2em",
+                          }}
+                        >
+                          √
+                        </p>
+                      </button>
+                    </label>
+                    <a style={{ marginLeft: "30px", marginTop: "10px" }}>
+                      {formatTime(timer)}
+                    </a>
+                  </div>
+                )}
             </div>
 
             <div
@@ -448,16 +576,6 @@ const Register = () => {
                   onChange={(e) => setBirth(e.target.value)}
                 />
               </label>
-            </div>
-
-            <div id="kakao-login-btn" className="custom-kakao-btn">
-              <img
-                src={kki}
-                style={{ width: "20px", height: "auto" }}
-                alt="Kakao Logo"
-                className="kakao-logo"
-              />
-              <span>카카오 회원가입</span>
             </div>
           </form>
           <button className="bubbly-button" onClick={handleButtonClick}>

@@ -24,6 +24,8 @@ import WriteReview from "./pages/WriteReview";
 import QNAList from "./pages/QNAList";
 import WriteQNA from "./pages/WriteQNA";
 import QNA from "./pages/QNA";
+import ModifyReview from "./pages/ModifyReview";
+import BuyLecture from "./pages/buyLecture";
 
 import Lecture_watch from "./pages/Lecture_watch";
 
@@ -50,26 +52,31 @@ const router = createBrowserRouter([
         element: <WriteReview />,
       },
       {
+        path: "/lecture/writeReview",
+        element: <WriteReview />,
+      },
+      {
+        path: "/api/buyLecture",
+        element: <BuyLecture />,
+      },
+
+      {
         path: "/lecture/writeQNA",
         element: <WriteQNA />,
       },
 
       {
-        path: "/lecture",
+        path: "/lecture/:lectureNo",
         element: <LectureInfo />,
       },
       {
-        path: "/lecture2",
+        path: "/lecture/title/:title",
         element: <LectureInfo2 />,
       },
       {
         path: "/api/",
         element: <Home />,
       },
-      // {
-      //   path: "/api/2",
-      //   element: <Home2 />,
-      // },
       {
         path: "/modifyUser/userCheck",
         element: <ModifyUserCheck />,

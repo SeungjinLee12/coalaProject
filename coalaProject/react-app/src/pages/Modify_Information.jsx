@@ -1,13 +1,19 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Modify_Information = () => {
-  const [inputChangeNickname, setInputNicknameChange] = useState("");
-  const [inputChangePhone, setInputPhoneChange] = useState("");
   const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+  const [inputChangePhone, setInputPhoneChange] = useState("");
+  const [nicknameMessage, setNicknameMessage] = useState("중복체크를 해주세요");
 
+  const [inputChangeNickname, setInputNicknameChange] = useState("");
   const handleInputNicknameChange = (e) => {
     setInputNicknameChange(e.target.value);
+    setNicknameMessage("중복체크를 해주세요");
   };
   const handleInputPhoneChange = (e) => {
     setInputPhoneChange(e.target.value);
@@ -33,16 +39,83 @@ const Modify_Information = () => {
   }, []);
 
   const handleButtonCheckNicknameClick = () => {
-    setTimeout(() => {
-      navigate("/");
-    }, 1000);
+    console.log(
+      "generatedSubItems : 555555555555555555555555555555555555 "
+      // generatedSubItems
+    );
+    axios
+      .post(`${serverUrl}/login/join/nameCheck`, { NAME: inputChangeNickname })
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status === "duplicate") {
+          setNicknameMessage({ text: res.data.message, color: "red" });
+        } else if (res.data.status === "available") {
+          setNicknameMessage({ text: res.data.message, color: "green" });
+        } else if (res.data.status === "invalid") {
+          setNicknameMessage({ text: res.data.message, color: "red" });
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
-  // const handleButtonClick = () => {
-  //   setTimeout(() => {
-  //     navigate("/");
-  //   }, 1000);
-  // };
+  // 닉네임에 특수문자 체크
+  const isNicknameValid = (inputChangeNickname) => {
+    if (inputChangeNickname !== "") {
+      const nicknameRegex = /^[a-zA-Z0-9가-힣]+$/;
+      return nicknameRegex.test(inputChangeNickname);
+    } else if (inputChangeNickname === "") {
+      return true;
+    }
+  };
+
+  // 전화번호 형식 체크 (11자리, - 제외)
+  const isPhoneNumberValid = (inputChangePhone) => {
+    if (inputChangePhone !== "") {
+      const phoneRegex = /^[0-9]{11}$/;
+      return phoneRegex.test(inputChangePhone.replace(/-/g, ""));
+    } else if (inputChangePhone === "") {
+      return true;
+    }
+  };
+
+  // 예시: 모든 유효성 검사를 수행하는 함수
+  const isFormValid = (inputChangeNickname, inputChangePhone) => {
+    return (
+      isNicknameValid(inputChangeNickname) &&
+      isPhoneNumberValid(inputChangePhone)
+    );
+  };
+
+  // handleButtonClick 함수에서 유효성 검사 후에 페이지 이동 여부 판단
+  const handleButtonClick = () => {
+    if (inputChangeNickname && inputChangePhone !== null) {
+      const isValid = isFormValid(inputChangeNickname, inputChangePhone);
+      // 닉네임 중복 체크 결과에 따른 검사
+      if (inputChangeNickname !== null) {
+        if (nicknameMessage.color !== "green") {
+          alert("닉네임 중복 체크를 해주세요.");
+          return;
+        }
+      }
+      if (isValid) {
+        axios.post(
+          `${serverUrl}/modifyUser/information/?userNo=${currentUser.USER_NO}`,
+          { NAME: inputChangeNickname, PHONE: inputChangePhone }
+        );
+        setTimeout(() => {
+          navigate("/api");
+        }, 1000);
+        alert("회원정보 수정 완료");
+      } else {
+        console.log("가입이 불가능합니다. 양식을 다시 확인하세요.");
+        alert("가입이 불가능합니다. 양식을 다시 확인하세요.");
+      }
+    } else {
+      alert("수정 내역이 없습니다.");
+    }
+  };
 
   return (
     <div style={{ display: "flex" }}>
@@ -146,6 +219,15 @@ const Modify_Information = () => {
               check
             </button>
           </div>
+          <p
+            style={{
+              width: "100%",
+              marginLeft: "150px ",
+              color: nicknameMessage.color, // emailMessage의 color 속성에 따라 색상 적용
+            }}
+          >
+            {nicknameMessage.text}
+          </p>
           <div
             style={{
               display: "flex",

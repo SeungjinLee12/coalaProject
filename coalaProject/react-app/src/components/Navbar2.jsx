@@ -24,6 +24,7 @@ const Navbar = () => {
       .then((res) => {
         const searchResults = res.data;
         const word = searchTerm;
+        console.log("dsfnajnakdjsf", searchResults);
         navigate(`/api/search/?word=${word}`, {
           state: {
             searchResults,
@@ -52,49 +53,6 @@ const Navbar = () => {
     navigate("/login"); // "/"로 이동
   };
 
-  useEffect(() => {
-    axios.get(`${serverUrl}/api/`).then((res) => {
-      const topLevelCategories = res.data.category_list.filter(
-        (category) => category.parent_category === null
-      );
-
-      const topLevelCategoryNames = topLevelCategories.map(
-        (category) => category.category_name
-      );
-
-      setDropdownItems(topLevelCategoryNames);
-
-      // 동적으로 generatedSubItems 생성
-      const categoryMap = res.data.category_list.reduce((map, category) => {
-        const parentCategoryName = category.parent_category
-          ? res.data.category_list.find(
-              (c) => c.category_no === category.parent_category
-            ).category_name
-          : null;
-
-        if (!parentCategoryName) {
-          map[category.category_no] = { parent: null, children: [] };
-        } else {
-          if (!map[parentCategoryName]) {
-            map[parentCategoryName] = { parent: null, children: [] };
-          }
-          map[parentCategoryName].children.push(category.category_name);
-        }
-        return map;
-      }, {});
-
-      const generatedSubItems = {};
-      for (const categoryName in categoryMap) {
-        const categoryInfo = categoryMap[categoryName];
-        const parentKey = categoryName;
-        const children = categoryInfo.children;
-        generatedSubItems[parentKey] = children;
-      }
-
-      // setGeneratedSubItems를 호출하여 generatedSubItems 설정
-      setGeneratedSubItems(generatedSubItems);
-    });
-  }, []);
   ///////////////////////////////////////////////////////////////////////////////////////
   const searchSearchCategory = (item) => {
     if (!item) {
@@ -105,6 +63,8 @@ const Navbar = () => {
       .then((res) => {
         const searchResults = res.data;
         const word = item;
+        console.log("dsfnajnakdjsf", searchResults);
+
         navigate(`/api/search/?word=${word}`, {
           state: {
             searchResults,
@@ -145,8 +105,17 @@ const Navbar = () => {
   };
 
   const generateDropdownItems = (items) => {
-    // console.log("dropdownItems : ", dropdownItems);
-    // console.log("generatedSubItems : ", generatedSubItems);
+    console.log("dropdownItems : ", dropdownItems);
+    console.log("generatedSubItems : ", generatedSubItems);
+
+    const categoryData_list = {
+      upperCategory: dropdownItems,
+      lowerCategory: generatedSubItems,
+    };
+    localStorage.setItem(
+      "categoryData_list",
+      JSON.stringify(categoryData_list)
+    );
 
     return (
       <div
@@ -226,6 +195,62 @@ const Navbar = () => {
       </div>
     );
   };
+
+  useEffect(() => {
+    axios.get(`${serverUrl}/api/`).then((res) => {
+      const topLevelCategories = res.data.category_list.filter(
+        (category) => category.parent_category === null
+      );
+
+      const topLevelCategoryNames = topLevelCategories.map(
+        (category) => category.category_name
+      );
+
+      setDropdownItems(topLevelCategoryNames);
+
+      // 동적으로 generatedSubItems 생성
+      const categoryMap = res.data.category_list.reduce((map, category) => {
+        const parentCategoryName = category.parent_category
+          ? res.data.category_list.find(
+              (c) => c.category_no === category.parent_category
+            ).category_name
+          : null;
+
+        if (!parentCategoryName) {
+          map[category.category_no] = {
+            parent: "upperCategory",
+            children: category.category_name,
+          };
+        } else {
+          if (!map[parentCategoryName]) {
+            map[parentCategoryName] = { parent: null, children: [] };
+          }
+          map[parentCategoryName].children.push(category.category_name);
+        }
+        return map;
+      }, {});
+
+      const generatedSubItems = {};
+      for (const categoryName in categoryMap) {
+        const categoryInfo = categoryMap[categoryName];
+        const parentKey = categoryName;
+        const children = categoryInfo.children;
+        generatedSubItems[parentKey] = children;
+      }
+
+      // setGeneratedSubItems를 호출하여 generatedSubItems 설정
+      setGeneratedSubItems(generatedSubItems);
+
+      // const categoryData_list = {
+      //   upperCategory: dropdownItems,
+      //   lowerCategory: generatedSubItems,
+      // };
+      // localStorage.setItem(
+      //   "categoryData_list",
+      //   JSON.stringify(categoryData_list)
+      // );
+    });
+  }, []);
 
   const getSubDropdownItems = (item) => {
     return generatedSubItems[item] || [];

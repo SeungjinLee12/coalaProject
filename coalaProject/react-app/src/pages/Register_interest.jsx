@@ -1,122 +1,23 @@
-// import React, { useState, useEffect } from "react";
-// import { useNavigate, useLocation, Link } from "react-router-dom";
-
-// const extractChildCategories = (categories, parentCategoryId) => {
-//   if (!categories) {
-//     console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa");
-//     return [];
-//   } else {
-//     console.log("bbbbbbbbbbbbbbbbbbbbbbb");
-//     return categories.filter(
-//       (category) => category.parent_category === parentCategoryId
-//     );
-//   }
-// };
-
-// const extractSiblingCategories = (categories, parentCategoryId) => {
-//   return categories.filter(
-//     (category) =>
-//       category.parent_category === parentCategoryId &&
-//       category.category_no !== parentCategoryId
-//   );
-// };
-
-// const Dropdown = ({ label, options, onChange }) => {
-//   return (
-//     <div
-//       style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
-//     >
-//       <h2 style={{ marginRight: "10px" }}>{label}</h2>
-//       <select onChange={onChange} style={{ border: "!px" }}>
-//         <option value="">Select</option>
-//         {options.map((option) => (
-//           <option key={option.category_no} value={option.category_no}>
-//             {option.category_name}
-//           </option>
-//         ))}
-//       </select>
-//     </div>
-//   );
-// };
-
-// const Register = () => {
-//   const navigate = useNavigate();
-//   const location = useLocation();
-//   const { state } = location;
-//   const { email, password, nickname, phoneNumber, categoryData } = state;
-
-//   const [selectedCategory1, setSelectedCategory1] = useState("");
-//   // const [selectedCategory2, setSelectedCategory2] = useState("");
-//   // Add more state variables for additional levels if needed
-
-//   const handleCategory1Change = (e) => {
-//     setSelectedCategory1(e.target.value);
-//     // Reset other selected categories when the first dropdown changes
-//     setSelectedCategory2("");
-//     console.log(
-//       "dddddddddddddddddddddddddddddddd",
-//       extractSiblingCategories(categoryData, e.target.value)
-//     );
-
-//     // Update additional state variables if needed
-//   };
-
-//   const handleButtonClick = () => {
-//     const selectedCategory1Info = categoryData[selectedCategory1];
-//     // Additional logic for other selected categories if needed
-//     setTimeout(() => {
-//       navigate("/");
-//     }, 500);
-//   };
-
-//   return (
-//     <>
-//       <h1>관심분야 설정</h1>
-//       <div style={{ display: "flex" }}>
-//         <Dropdown
-//           label="①"
-//           options={extractChildCategories(categoryData, null)}
-//           onChange={handleCategory1Change}
-//         />
-//         {/* {selectedCategory1 && (
-//           <Dropdown
-//             label="---"
-//             options={extractSiblingCategories(categoryData, selectedCategory1)}
-//             onChange={(e) => setSelectedCategory2(e.target.value)}
-//           />
-//         )} */}
-//       </div>
-//       {/* Render additional dropdowns based on the selected categories */}
-//       <button className="bubbly-button" onClick={handleButtonClick}>
-//         success
-//       </button>
-//     </>
-//   );
-// };
-
-// export default Register;
-
-////////////////////////////////////////////////////////
-
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+///////////////////////////////////////////////////완성본
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const extractSiblingCategories = (categories, parentCategoryId) => {
-  return categories;
-};
-
+const serverUrl = process.env.REACT_APP_SERVER_URL;
 const Dropdown = ({ label, options, onChange }) => {
   return (
     <div
       style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
     >
       <h2 style={{ marginRight: "10px" }}>{label}</h2>
-      <select onChange={onChange} style={{ border: "!px" }}>
+      <select
+        onChange={onChange}
+        style={{ border: "1px solid #ccc", padding: "5px" }}
+      >
         <option value="">Select</option>
-        {options.map((option) => (
-          <option key={option.category_no} value={option.category_no}>
-            {option.category_name}
+        {options.map((option, index) => (
+          <option key={index} value={option}>
+            {option}
           </option>
         ))}
       </select>
@@ -127,70 +28,151 @@ const Dropdown = ({ label, options, onChange }) => {
 const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, password, nickname, phoneNumber, categoryData, birth } = state;
   const { state } = location;
+  const { email, password, nickname, phoneNumber, birth } = state;
+  const [upperCategory, setUpperCategory] = useState([]);
+  const [lowerCategory, setLowerCategory] = useState({});
+  const [selectedCategories, setSelectedCategories] = useState([
+    { upper: "", lower: "" },
+    { upper: "", lower: "" },
+    { upper: "", lower: "" },
+  ]);
+  const [lowerCategoryOptions, setLowerCategoryOptions] = useState([]);
 
-  const [selectedCategory1, setSelectedCategory1] = useState("");
-  const [selectedCategory2, setSelectedCategory2] = useState("");
-  const [selectedCategory3, setSelectedCategory3] = useState("");
+  useEffect(() => {
+    const categoryDataList = JSON.parse(
+      localStorage.getItem("categoryData_list")
+    );
 
-  const handleCategory1Change = (e) => {
-    setSelectedCategory1(e.target.value);
+    if (categoryDataList) {
+      setUpperCategory(categoryDataList.upperCategory || []);
+      setLowerCategory(categoryDataList.lowerCategory || {});
+    }
+  }, []);
+
+  useEffect(() => {
+    // Update lower category options based on the selected categories
+    const updatedOptions = selectedCategories.map((selectedCategory, index) => {
+      return selectedCategory.upper && lowerCategory[selectedCategory.upper]
+        ? lowerCategory[selectedCategory.upper]
+        : [];
+    });
+
+    setLowerCategoryOptions(updatedOptions);
+  }, [selectedCategories, lowerCategory]);
+
+  useEffect(() => {
+    var animateButton = function (e) {
+      e.preventDefault();
+      // reset animation
+      e.target.classList.remove("animate");
+
+      e.target.classList.add("animate");
+      setTimeout(function () {
+        e.target.classList.remove("animate");
+      }, 700);
+    };
+
+    var bubblyButtons = document.getElementsByClassName("bubbly-button");
+
+    for (var i = 0; i < bubblyButtons.length; i++) {
+      bubblyButtons[i].addEventListener("click", animateButton, false);
+    }
+  }, []);
+
+  const handleUpperCategoryChange = (index) => (e) => {
+    const newSelectedCategories = [...selectedCategories];
+    newSelectedCategories[index] = {
+      upper: e.target.value,
+      lower: "",
+    };
+    setSelectedCategories(newSelectedCategories);
   };
 
-  const handleCategory2Change = (e) => {
-    setSelectedCategory2(e.target.value);
-  };
-
-  const handleCategory3Change = (e) => {
-    setSelectedCategory3(e.target.value);
+  const handleLowerCategoryChange = (index) => (e) => {
+    const newSelectedCategories = [...selectedCategories];
+    newSelectedCategories[index].lower = e.target.value;
+    setSelectedCategories(newSelectedCategories);
   };
 
   const handleButtonClick = () => {
-    // 선택한 카테고리와 회원가입에 필요한 정보를 서버로 전송
+    // TODO: Implement your logic for handling the selected categories
+    let INTEREST1 = null;
+    let INTEREST2 = null;
+    let INTEREST3 = null;
+
+    selectedCategories.forEach(async (selectedCategory, index) => {
+      if (index === 0 && selectedCategory.lower) {
+        INTEREST1 = selectedCategory.lower;
+      } else if (index === 0 && selectedCategory.upper) {
+        INTEREST1 = selectedCategory.upper;
+      } else if (index === 1 && selectedCategory.lower) {
+        INTEREST2 = selectedCategory.lower;
+      } else if (index === 1 && selectedCategory.upper) {
+        INTEREST2 = selectedCategory.upper;
+      } else if (index === 2 && selectedCategory.lower) {
+        INTEREST3 = selectedCategory.lower;
+      } else if (index === 2 && selectedCategory.upper) {
+        INTEREST3 = selectedCategory.upper;
+      }
+    });
+    console.log(INTEREST1, INTEREST2, INTEREST3);
+
     axios
-      .post("http://localhost:4001/login/join_user", {
-        EMAIL: email,
-        NAME: nickname,
-        PASSWORD: password,
-        PHONE: phoneNumber,
-        BIRTH: birth, // 적절한 값으로 변경
-        INTEREST1: selectedCategory1,
-        INTEREST2: selectedCategory2,
-        INTEREST3: selectedCategory3,
+      .get(`${serverUrl}/login/join/interest/check`, {
+        params: {
+          INTEREST1,
+          INTEREST2,
+          INTEREST3,
+        },
       })
       .then((res) => {
-        setTimeout(() => {
-          navigate("/api");
-        }, 500);
-        alert("회원가입 성공");
-      })
-      .catch((error) => {
-        console.error(error);
+        const interest1 = res.data.categoryNos[0];
+        const interest2 = res.data.categoryNos[1];
+        const interest3 = res.data.categoryNos[2];
+        axios
+          .post("http://localhost:4001/login/join_user", {
+            EMAIL: email,
+            NAME: nickname,
+            PASSWORD: password,
+            PHONE: phoneNumber,
+            BIRTH: birth, // 적절한 값으로 변경
+            INTEREST1: interest1,
+            INTEREST2: interest2,
+            INTEREST3: interest3,
+          })
+          .then((res) => {
+            setTimeout(() => {
+              navigate("/api");
+            }, 500);
+            alert("회원가입 성공");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       });
   };
 
   return (
     <>
       <h1>관심분야 설정</h1>
-      <div style={{}}>
-        <Dropdown
-          label="1"
-          options={extractSiblingCategories(categoryData, null)}
-          onChange={handleCategory1Change}
-        />
-        <br />
-        <Dropdown
-          label="2"
-          options={extractSiblingCategories(categoryData, selectedCategory1)}
-          onChange={handleCategory2Change}
-        />
-        <Dropdown
-          label="3"
-          options={extractSiblingCategories(categoryData, selectedCategory2)}
-          onChange={handleCategory3Change}
-        />
-      </div>
+      {[0, 1, 2].map((index) => (
+        <div style={{ display: "flex" }} key={index}>
+          <Dropdown
+            label={`Category ${index + 1}`}
+            options={upperCategory}
+            onChange={handleUpperCategoryChange(index)}
+          />
+          {lowerCategoryOptions[index] &&
+            lowerCategoryOptions[index].length > 0 && (
+              <Dropdown
+                label="→"
+                options={lowerCategoryOptions[index]}
+                onChange={handleLowerCategoryChange(index)}
+              />
+            )}
+        </div>
+      ))}
       <button className="bubbly-button" onClick={handleButtonClick}>
         success
       </button>
@@ -199,3 +181,5 @@ const Register = () => {
 };
 
 export default Register;
+
+// ////////////////////////////////////////////////////////////////////////////////
