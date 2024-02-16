@@ -72,21 +72,23 @@ router.get("/", (req, res) => {
 router.post("/1", (req, res) => {
   const userNo = req.body.userNo;
   db.query(
-    `WITH table2 as (
-        WITH table1 AS (
-            SELECT DISTINCT CATEGORY_NO, C.CATEGORY_NAME, C.CATEGORY_NO AS table1_category_no
-            FROM CATEGORY C
-            WHERE C.CATEGORY_NO IN (
-                SELECT INTEREST1 FROM USER WHERE USER_NO = ${userNo}
+    `
+    WITH table2 as (
+                WITH table1 AS (
+                    SELECT DISTINCT C.CATEGORY_NAME, C.CATEGORY_NO AS table1_category_no
+                    FROM CATEGORY C
+                    WHERE C.CATEGORY_NO IN (
+                        SELECT INTEREST1 FROM USER WHERE USER_NO = ${userNo}
+                    )
+                )
+                SELECT t1.CATEGORY_NAME, t1.table1_category_no
+                FROM table1 t1
             )
-        )
-        SELECT t1.CATEGORY_NAME, t1.table1_category_no
-        FROM table1 t1
-    )
-    SELECT 1.LECTURE_NO, CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
-    FROM LECTURECATEGORY lc
-    JOIN table2 t2 ON lc.CATEGORY_NO = t2.table1_category_no
-    JOIN LECTURE l ON lc.LECTURE_NO = l.LECTURE_NO;`,
+            SELECT l.LECTURE_NO, CATEGORY_NAME, l.TITLE, l.PRICE, l.STAR, l.IMAGEURL, l.view_cnt
+            FROM LECTURECATEGORY lc
+            JOIN table2 t2 ON lc.CATEGORY_NO = t2.table1_category_no
+            JOIN LECTURE l ON lc.LECTURE_NO = l.LECTURE_NO;
+    `,
     [userNo],
     function (err, rows) {
       if (err) {
@@ -173,7 +175,7 @@ router.post("/1", (req, res) => {
               }));
 
               db.query(
-                `SELECT L.TITLE, S.STARTTIME, S.STUDYRATE, L.IMAGEURL, L.LECTURE_NO, L.STAR
+                `SELECT L.TITLE, S.STARTTIME, S.STUDYRATE, L.IMAGEURL, L.LECTURE_NO, L.STAR, L.PRICE
             FROM STUDY S
             JOIN LECTURE L ON S.LECTURE_NO = L.LECTURE_NO
             WHERE S.USER_NO = ?;`,
@@ -185,12 +187,6 @@ router.post("/1", (req, res) => {
                     return;
                   }
 
-                  // if (rows.length === 0) {
-                  //   // 데이터가 없을 경우
-                  //   res.status(200).json({ message: "No data found" });
-                  //   return;
-                  // }
-
                   var userStudy = rows.map((row) => ({
                     study_star: row.STAR,
                     study_title: row.TITLE,
@@ -198,6 +194,7 @@ router.post("/1", (req, res) => {
                     study_studyRate: row.STUDYRATE,
                     study_imageUrl: row.IMAGEURL,
                     study_lectureNo: row.LECTURE_NO,
+                    study_price: row.PRICE,
                   }));
 
                   const resResult = {
@@ -212,6 +209,43 @@ router.post("/1", (req, res) => {
               );
             }
           );
+        }
+      );
+    }
+  );
+});
+
+router.post("/2", (req, res) => {
+  const lectureNo = req.body.lectureNo;
+  const userNo = req.body.userNo;
+
+  console.log(lectureNo, userNo);
+
+  db.query(
+    `
+    SELECT SUM(Progress) AS PROGRESS FROM USERPROGRESS
+    WHERE LECTURE_NO =? AND USER_NO = ?;
+  `,
+    [lectureNo, userNo],
+    function (err, rows) {
+      if (err) {
+        throw err;
+      }
+      var userProgress = rows[0].PROGRESS;
+      db.query(
+        `SELECT LECTURETOTALVIDEOTIME 
+      FROM LECTURE
+      WHERE LECTURE_NO = ?; `,
+        [lectureNo],
+        function (err, rows) {
+          if (err) {
+            throw err;
+          }
+          var totalTime = rows[0].LECTURETOTALVIDEOTIME;
+          var percent = (userProgress / totalTime) * 100;
+
+          console.log(percent, userProgress, totalTime);
+          res.json(percent);
         }
       );
     }

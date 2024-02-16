@@ -36,26 +36,53 @@ const Login = () => {
   };
 
   const kakaoOnSuccess = async (data) => {
-    console.log("@@@@@@@@@@@@@@@$$$$$$$$$$$$$$", data);
-    // const idToken = data.response.access_token;
-    // if (idToken) {
-    //   try {
-    //     const response = await axios.post(
-    //       `${serverUrl}/login/kakao/callback`,
-    //       {
-    //         idToken,
-    //       },
-    //       {
-    //         withCredentials: true,
-    //       }
-    //     );
-    //     console.log("response.data12: ", response.data);
-    //     login(response.data.UserEmail, response.data.Password);
-    //   } catch (error) {
-    //     console.log("error: ", error);
-    //   }
-    // }
+    const idToken = data.response.access_token;
+    if (idToken) {
+      try {
+        const response = await axios.post(
+          `${serverUrl}/login/kakao/callback`,
+          {
+            idToken,
+          }
+          // ,
+          // {
+          //   withCredentials: true,
+          // }
+        );
+        if (response.data.message === "first") {
+          const email = response.data.data.UserEmail;
+          const password = response.data.data.Password;
+          const phoneNumber = response.data.data.UserCellPhone;
+          const birth = response.data.data.Birth;
+          alert(
+            "카카오 로그인 첫 시도 시 닉네임과 관심과목을 등록하셔야 됩니다."
+          );
+          navigate("/registerKakao", {
+            state: {
+              email,
+              password,
+              phoneNumber,
+              birth,
+            },
+          });
+        } else {
+          const email = response.data.loginData.UserEmail;
+          const password = response.data.loginData.Password;
+          console.log("?");
+          const userData = {
+            email: email,
+            password: password,
+          };
+          await login(userData);
+
+          navigate("/api"); // 로그인 성공 시 "/"로 이동
+        }
+      } catch (error) {
+        console.log("error: ", error);
+      }
+    }
   };
+
   const kakaoOnFailure = (error) => {
     // window.location.href = "http://localhost:3000";
     console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@", error);

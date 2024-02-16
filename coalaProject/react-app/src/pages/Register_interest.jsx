@@ -143,7 +143,7 @@ const Register = () => {
           })
           .then((res) => {
             setTimeout(() => {
-              navigate("/api");
+              navigate("/login");
             }, 500);
             alert("회원가입 성공");
           })

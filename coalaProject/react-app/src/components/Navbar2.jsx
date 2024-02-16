@@ -140,6 +140,7 @@ const Navbar = () => {
               boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
               zIndex: 1,
               width: "130px",
+              marginRight: "100px",
             }}
             onMouseEnter={handleSubCategoryHover}
             onMouseLeave={handleSubCategoryLeave}
@@ -286,11 +287,28 @@ const Navbar = () => {
           </div>
         </a>
 
-        <div className="code_view actionBtn7 category">
+        <div className="code_view actionBtn7 category" style={{}}>
           {generateDropdownItems(dropdownItems)}
         </div>
+        <div className="code_view actionBtn7 category" style={{}}>
+          <button
+            onClick={myPageEnter}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "18px",
+              fontWeight: "bold",
+              marginTop: "45px",
+            }}
+          >
+            MyPage
+          </button>
+        </div>
 
-        <form className="search-container" style={{ marginRight: "0px" }}>
+        <form
+          className="search-container"
+          style={{ marginRight: "20px", width: "230px" }}
+        >
           <input
             type="text"
             id="search-bar"

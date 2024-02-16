@@ -40,7 +40,8 @@ const QNA = () => {
 
   const handleAddComment = () => {
     const userNo = currentUser.USER_NO;
-    if (comments !== "") {
+    console.log(comments.length);
+    if (comments !== "" && comments.length < 1000) {
       axios
         .post(`${serverUrl}/lecture/QNA/reply`, {
           questionNo: questionNo,
@@ -56,6 +57,8 @@ const QNA = () => {
         });
     } else if (comments === "" || comments === null) {
       alert("댓글을 작성해주세요");
+    } else if (comments.length > 1000) {
+      alert("댓글은 1000자 이상 작성하실 수 없습니다.");
     }
   };
 
@@ -98,7 +101,7 @@ const QNA = () => {
   const handleModifyComment = () => {
     const userNo = currentUser.USER_NO;
     console.log(comments);
-    if (comments !== "") {
+    if (comments !== "" && comments.length < 1000) {
       axios
         .post(`${serverUrl}/lecture/QNA/modifyReply`, {
           replyNo: editReplyNo,
@@ -117,7 +120,15 @@ const QNA = () => {
         });
     } else if (comments === "" || comments === null) {
       alert("댓글을 작성해주세요");
+    } else if (comments.length > 1000) {
+      alert("댓글은 1000자 이상 작성하실 수 없습니다.");
     }
+  };
+
+  const handleButtonPrev = () => {
+    navigate(`/lecture/QNAList/?lectureNo=${lectureNo}`, {
+      state: { lectureNo, lectureTitle },
+    });
   };
 
   useEffect(() => {
@@ -138,9 +149,17 @@ const QNA = () => {
           <h1 style={{ marginTop: "20px" }}>{lectureTitle} - Q&A</h1>
           <h2>제목 : {questionTitle}</h2>
           <h4>작성자 : {userName}</h4>
-          <h5>작성일 : {formatDate(inserttime)}</h5>
+          <div style={{ display: "flex" }}>
+            <h5>작성일 : {formatDate(inserttime)}</h5>
+            <Button
+              style={{ marginLeft: "700px", height: "40px" }}
+              onClick={handleButtonPrev}
+            >
+              리스트로 가기
+            </Button>
+          </div>
 
-          <div style={{ whiteSpace: "normal" }}>
+          <div style={{ whiteSpace: "normal", marginTop: "5px" }}>
             <div
               style={{
                 border: "1px solid #ccc",

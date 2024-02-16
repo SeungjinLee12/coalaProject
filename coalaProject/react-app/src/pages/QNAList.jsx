@@ -53,10 +53,18 @@ const QNAList = () => {
       },
     });
   };
+  const handleButtonPrev = () => {
+    navigate(`/lecture/${lectureNo}`);
+  };
 
   return (
     <div style={{ marginTop: "20px" }}>
-      <h1 style={{ marginLeft: "20px" }}>Q&A - {lectureTitle}</h1>
+      <div style={{ display: "flex" }}>
+        <h1 style={{ marginLeft: "20px" }}>Q&A - {lectureTitle}</h1>
+        <Button style={{ marginLeft: "650px" }} onClick={handleButtonPrev}>
+          강의소개로 가기
+        </Button>
+      </div>
 
       <table
         style={{
@@ -181,16 +189,5 @@ const Button = styled(BaseButton)(
 
   `
 );
-
-const formatDate = (datetimeString) => {
-  const options = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  };
-  return new Date(datetimeString).toLocaleString("ko-KR", options);
-};
 
 export default QNAList;

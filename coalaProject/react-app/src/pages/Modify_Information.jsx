@@ -123,18 +123,18 @@ const Modify_Information = () => {
         <ul>
           <li>
             <a
-              href="/modifyUser/password"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              비밀번호 변경
-            </a>
-          </li>
-          <li style={{ marginTop: "20%" }}>
-            <a
               href="/modifyUser/information"
               style={{ textDecoration: "none", color: "inherit" }}
             >
               내 정보 수정
+              <li style={{ marginTop: "20%" }}>
+                <a
+                  href="/modifyUser/password"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  비밀번호 변경
+                </a>
+              </li>
             </a>
           </li>
           <li style={{ marginTop: "20%" }}>
@@ -181,7 +181,7 @@ const Modify_Information = () => {
         }}
       >
         <div style={{}}>
-          <h1>My Page - 내 정보 수정</h1>
+          <h1 style={{ marginLeft: "80px" }}>My Page - 내 정보 수정</h1>
           <div
             style={{
               display: "flex",

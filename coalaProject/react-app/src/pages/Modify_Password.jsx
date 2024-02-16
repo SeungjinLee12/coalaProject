@@ -73,18 +73,18 @@ const Modify_Password = () => {
         <ul>
           <li>
             <a
-              href="/modifyUser/password"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              비밀번호 변경
-            </a>
-          </li>
-          <li style={{ marginTop: "20%" }}>
-            <a
               href="/modifyUser/information"
               style={{ textDecoration: "none", color: "inherit" }}
             >
               내 정보 수정
+              <li style={{ marginTop: "20%" }}>
+                <a
+                  href="/modifyUser/password"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  비밀번호 변경
+                </a>
+              </li>
             </a>
           </li>
           <li style={{ marginTop: "20%" }}>

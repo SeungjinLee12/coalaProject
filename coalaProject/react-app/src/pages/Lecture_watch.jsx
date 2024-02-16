@@ -33,7 +33,6 @@ const Lecture_watch = () => {
       tocNo,
       lectureTOC_list,
       lectureInfo_list,
-      "############",
       selectedTOCList
     );
     setShowTOC((prevShowTOC) => !prevShowTOC);
@@ -90,8 +89,8 @@ const Lecture_watch = () => {
   };
 
   return (
-    <div>
-      <a href="/" style={{ textDecoration: "none", color: "inherit" }}>
+    <div style={{ marginTop: "20px" }}>
+      <a href="/api/" style={{ textDecoration: "none", color: "inherit" }}>
         <div
           className="logo-name"
           style={{ display: "flex", alignItems: "center" }}
@@ -118,23 +117,24 @@ const Lecture_watch = () => {
         }}
       >
         <h1>{lectureTitle}</h1>
-        <div style={{ display: "flex", width: "80%" }}>
+        <div style={{ display: "flex", width: "100%", marginTop: "20px" }}>
           <VideoPlayer
             style={{
               flex: 8,
               height: "400px",
+              width: "600px",
               border: "2px solid #000",
               margin: "10px",
-              width: "600px",
             }}
-            tocId={selectedTOCList.TOC_no}
+            lectureNo={lectureNo}
+            tocNo={selectedTOC}
             src={selectedTOCList.videoUrl}
           ></VideoPlayer>
 
           <div
             style={{
               flex: 2,
-              height: "400px",
+              height: "500px",
               border: "2px solid #000",
               margin: "10px",
               display: "flex",
@@ -161,7 +161,7 @@ const Lecture_watch = () => {
               style={{ margin: "5px", marginTop: "auto" }}
               onClick={handleBack}
             >
-              강의화면으로 돌아가기
+              나가기
             </Button>
           </div>
         </div>
@@ -187,7 +187,7 @@ const Lecture_watch = () => {
             </Button>
           )}
         </div>
-        <div style={{ marginTop: "80px", marginRight: "80%" }}>
+        <div style={{ marginTop: "80px" }}>
           <h3>이번 화 내용 :{selectedTOCList.INFO_description}</h3>
         </div>
       </div>

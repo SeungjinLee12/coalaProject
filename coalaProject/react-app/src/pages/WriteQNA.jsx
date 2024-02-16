@@ -29,7 +29,12 @@ const WriteQNA = () => {
 
   const handleSubmitButton = () => {
     const userNo = currentUser.USER_NO;
-    if (questionTitle !== "" && questionContent !== "") {
+    if (
+      questionTitle !== "" &&
+      questionContent !== "" &&
+      questionTitle.length < 30 &&
+      questionContent < 3050
+    ) {
       axios
         .post(`${serverUrl}/lecture/writeQNA`, {
           TITLE: questionTitle,
@@ -51,6 +56,10 @@ const WriteQNA = () => {
       alert("제목을 작성해주세요");
     } else if (questionContent === null || questionContent === "") {
       alert("질문을 작성해주세요");
+    } else if (questionTitle.length > 30) {
+      alert("질문의 제목은 30자 이하만 작성이 가능합니다.");
+    } else if (questionContent.length > 3000) {
+      alert("질문은 3000자 이하만 작성이 가능합니다.");
     }
   };
 

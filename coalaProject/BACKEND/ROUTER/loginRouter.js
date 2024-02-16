@@ -6,6 +6,8 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
+const { query } = require("express");
 
 // /login
 
@@ -83,10 +85,13 @@ router.post("/", (req, res) => {
 router.get("/logout", (req, res) => {
   try {
     // 클라이언트로부터 쿠키를 얻기 위해 request.cookies 사용
+
     const cookies = req.cookies;
+    console.log("no~~~~~~~~~~~~~~~~~~~~~~~~~~~", cookies);
     if (cookies !== null) {
       for (const userToken in cookies) {
         if (cookies.hasOwnProperty(userToken)) {
+          console.log("ok~~~~~~~~~~~~~~~~~~~~~~~~~~asdasd~");
           // 쿠키의 maxAge를 0으로 설정하여 쿠키 만료
           res.cookie(userToken, "", { maxAge: 0, httpOnly: true });
         }
@@ -312,123 +317,74 @@ router.get("/join/interest", (req, res) => {
   }
 });
 
-// router.post('/kakao/callback', async function(req, res) {
-//   const access_token = req.body.idToken;
-//   console.log("access_token", access_token);
-//   let UserEmail = "";
-//   let Password = "";
-//   let UserName = "";
-//   let UserCellPhone = "";
-//   let UserNickname = "";
-//   let ProfileImage = "";
-//   if (access_token != null && access_token) {
-//     const profileUrl = "https://kapi.kakao.com/v2/user/me";
-//     try {
-//       const profileResponse = await axios.get(profileUrl, {
-//         headers: {
-//           Authorization: `Bearer ${access_token}`,
-//         },
-//       });
-//       Password = profileResponse.data.id.toString();
-//       PasswordCheck = profileResponse.data.id.toString();
-//       UserEmail = profileResponse.data.kakao_account.email;
-//       UserName = profileResponse.data.kakao_account.profile.nickname;
-//       UserCellPhone =
-//         "0" +
-//         profileResponse.data.kakao_account.phone_number.replace(
-//           /[\s+\-+]|82/g,
-//           ""
-//         );
-//       UserNickname = profileResponse.data.kakao_account.profile.nickname;
-//       ProfileImage = profileResponse.data.kakao_account.profile.profile_image_url;
-//       mysql.getConnection((error, conn) => {
-//         if (error) {
-//           console.log(error);
-//           res.status(500).json({ error: "내부 서버 오류" });
-//           return;
-//         }
-//         conn.query(
-//           "SELECT UserEmail, Password FROM users WHERE UserEmail = ?",
-//           [UserEmail],
-//           async (err, result) => {
-//             console.log("result12", result);
-//             if (err) {
-//               console.log(err);
-//               res.status(500).json({ error: "내부 서버 오류" });
-//               return;
-//             }
-//             if (result.length === 0) {
-//               // 비밀번호 해싱
-//               const hashedPassword = await bcrypt.hash(Password, 10);
-//               console.log("hashedPassword", hashedPassword);
-//               conn.query(
-//                 "INSERT INTO users (UserEmail, UserName, UserCellPhone, Password, ProfileImage, UserNickname) VALUES (?, ?, ?, ?, ?, ?)",
-//                 [UserEmail, UserName, UserCellPhone, hashedPassword, ProfileImage, UserNickname],
-//                 (err, result) => {
-//                   if (err) {
-//                     console.log(err);
-//                     res.status(500).json({ error: "내부 서버 오류" });
-//                     return;
-//                   }
-//                 }
-//               );
-//             }
-//             res.send({
-//               UserEmail,
-//               Password,
-//             });
-//             conn.release();
-//           }
-//         );
-//       });
-//     } catch (error) {
-//       console.error("프로필 요청 중 에러 발생:", error);
-//       res.status(500).send("프로필 요청 중에 오류가 발생했습니다.");
-//     }
-//   } else {
-//     console.error("액세스 토큰이 없습니다.");
-//     res.status(400).send("액세스 토큰이 없습니다.");
-//   }
-// });
+router.post("/kakao/callback", async function (req, res) {
+  const access_token = req.body.idToken;
+  console.log("access_token", access_token);
+  let UserEmail = "";
+  let Password = "";
+  let UserCellPhone = "";
+  let BirthYear = "";
+  let BirthDay = "";
+  let Birth = "";
 
-// router.post("/email", (req, res) => {
-//   var generateRandomNumber = function (min, max) {
-//     var randNum = Math.floor(Math.random() * (max - min + 1)) + min;
-//     return randNum;
-//   };
+  if (access_token != null && access_token) {
+    const profileUrl = "https://kapi.kakao.com/v2/user/me";
+    try {
+      const profileResponse = await axios.get(profileUrl, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+      Password = profileResponse.data.id.toString();
+      PasswordCheck = profileResponse.data.id.toString();
+      UserEmail = profileResponse.data.kakao_account.email;
+      UserCellPhone =
+        "0" +
+        profileResponse.data.kakao_account.phone_number.replace(
+          /[\s+\-+]|82/g,
+          ""
+        );
+      BirthYear = profileResponse.data.kakao_account.birthyear.toString();
+      BirthDay = profileResponse.data.kakao_account.birthday.toString();
+      const Year = BirthYear.substring(2, 5);
 
-//   const emailAuth = async (req, res) => {
-//     const number = generateRandomNumber(111111, 999999);
+      Birth = Year + BirthDay;
 
-//     const email = req.body.EMAIL;
-//     console.log(number, "$$$$$$$$$$$$$$$$$$$$$", email);
+      var data = {
+        UserEmail,
+        Password,
+        UserCellPhone,
+        Birth,
+      };
 
-//     const mailOptions = {
-//       from: "rntmdwlsrmf@gmail.com ", // 발신자 이메일 주소.
-//       to: email, //사용자가 입력한 이메일 -> 목적지 주소 이메일
-//       subject: " 인증 관련 메일 입니다. ",
-//       html: "<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>" + number,
-//     };
-//     smtpTransport.sendMail(mailOptions, (err, response) => {
-//       console.log("response", response);
-//       //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
-//       if (err) {
-//         res.json({ ok: false, msg: " 메일 전송에 실패하였습니다. " });
-//         smtpTransport.close(); //전송종료
-//         return;
-//       } else {
-//         res.json({
-//           ok: true,
-//           msg: " 메일 전송에 성공하였습니다. ",
-//           authNum: number,
-//         });
-//         smtpTransport.close(); //전송종료
-//         return;
-//       }
-//     });
-//   };
-//   emailAuth(req, res);
-// });
+      var loginData = {
+        UserEmail,
+        Password,
+      };
+
+      db.query(
+        "SELECT EMAIL FROM USER WHERE EMAIL = ?",
+        [UserEmail],
+        function (err, rows) {
+          if (err) {
+            throw err;
+          }
+          if (rows.length === 0) {
+            res.status(200).json({ message: "first", data });
+          } else {
+            res.status(200).json({ message: "ok", loginData });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("프로필 요청 중 에러 발생:", error);
+      res.status(500).send("프로필 요청 중에 오류가 발생했습니다.");
+    }
+  } else {
+    console.error("액세스 토큰이 없습니다.");
+    res.status(400).send("액세스 토큰이 없습니다.");
+  }
+});
 
 router.post("/email", (req, res) => {
   var generateRandomNumber = function (min, max) {

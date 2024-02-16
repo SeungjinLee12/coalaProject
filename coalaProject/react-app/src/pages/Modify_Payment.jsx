@@ -52,7 +52,6 @@ const Modify_Payment = () => {
   const [paymentData, setPaymentData] = useState([]);
 
   useEffect(() => {
-    // 서버에서 장바구니 데이터를 가져오는 함수
     const fetchCartData = async () => {
       try {
         const response = await axios.get(
@@ -73,18 +72,18 @@ const Modify_Payment = () => {
         <ul>
           <li>
             <a
-              href="/modifyUser/password"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              비밀번호 변경
-            </a>
-          </li>
-          <li style={{ marginTop: "20%" }}>
-            <a
               href="/modifyUser/information"
               style={{ textDecoration: "none", color: "inherit" }}
             >
               내 정보 수정
+              <li style={{ marginTop: "20%" }}>
+                <a
+                  href="/modifyUser/password"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  비밀번호 변경
+                </a>
+              </li>
             </a>
           </li>
           <li style={{ marginTop: "20%" }}>
@@ -130,31 +129,50 @@ const Modify_Payment = () => {
           width: "80%",
         }}
       >
-        <div style={{}}>
-          <h1 style={{ marginLeft: "210px" }}>My Page - 결제 내역</h1>
-          {paymentData.map((course, index) => (
-            <div
-              key={index}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginTop: "50px",
-                marginLeft: "60px",
-              }}
-            >
-              <img
-                src={course.imageUrl}
-                alt={course.title}
-                style={{ width: "100px", height: "100px", marginRight: "20px" }}
-              />
-              <div style={{ marginRight: "130px" }}>
-                <p>제목 : {course.title}</p>
-                <p>가격: {formatNumberWithCommas(course.price)}원</p>
-                <p>결제 시간: {formatDate(course.paymenttime)}</p>
+        {paymentData.length !== 0 ? (
+          <div style={{}}>
+            <h1 style={{ marginLeft: "210px" }}>My Page - 결제 내역</h1>
+            {paymentData.map((course, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: "50px",
+                  marginLeft: "200px",
+                }}
+              >
+                <img
+                  src={course.imageUrl}
+                  alt={course.title}
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    marginRight: "20px",
+                  }}
+                />
+                <div style={{ marginRight: "130px" }}>
+                  <p>제목 : {course.title}</p>
+                  <p>가격: {formatNumberWithCommas(course.price)}원</p>
+                  <p>결제 시간: {formatDate(course.paymenttime)}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            <h1 style={{ marginLeft: "80px" }}>My Page - 결제 내역</h1>
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <h3 style={{ alignItems: "center", marginLeft: "35%" }}>
+              결제 내역이 없습니다!
+            </h3>
+          </div>
+        )}
       </div>
     </div>
   );

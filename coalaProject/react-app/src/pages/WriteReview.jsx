@@ -91,7 +91,7 @@ const WriteReview = () => {
 
   const submitReview = () => {
     const userNo = currentUser.USER_NO;
-    if (selectedStars !== 0 && reviewText !== "") {
+    if (selectedStars !== 0 && reviewText !== "" && reviewText.length < 1000) {
       axios
         .post(`${serverUrl}/lecture/writeReview`, {
           STAR: selectedStars,
@@ -110,6 +110,8 @@ const WriteReview = () => {
       alert("별점을 선택해주세요");
     } else if (reviewText === null || reviewText === "") {
       alert("리뷰를 작성해주세요");
+    } else if (reviewText.length > 1000) {
+      alert("리뷰는 1000자 이하만 작성 가능합니다.");
     }
   };
 

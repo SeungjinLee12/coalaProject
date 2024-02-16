@@ -112,6 +112,7 @@ router.post("/password", async (req, res) => {
 
 // 유저 정보 수정 -> 장바구니 리스트
 router.get("/cart", (req, res) => {
+  var update_cart = [];
   db.query(
     `SELECT L.PRICE, L.TITLE, L.IMAGEURL, C.CART_NO, C.LECTURE_NO
       FROM CART C
@@ -123,7 +124,7 @@ router.get("/cart", (req, res) => {
         if (err) {
           throw err;
         }
-        var update_cart = rows.map((row) => ({
+        update_cart = rows.map((row) => ({
           cartNo: row.CART_NO,
           title: row.TITLE,
           imageUrl: row.IMAGEURL,
@@ -165,7 +166,7 @@ router.get("/payment", (req, res) => {
     JOIN LECTURE L ON P.LECTURE_NO = L.LECTURE_NO 
     JOIN USER U ON U.USER_NO = P.USER_NO
     WHERE U.USER_NO = ?
-    ORDER BY P.PAYMENTTIME ASC;`,
+    ORDER BY P.PAYMENTTIME DESC;`,
     [userNo],
     (err, rows) => {
       try {

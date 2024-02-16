@@ -135,21 +135,28 @@ const Register = () => {
   };
 
   const handleNicknameCheck = () => {
-    axios
-      .post(`${serverUrl}/login/join/nameCheck`, { NAME: nickname })
-      .then((res) => {
-        console.log(res.data);
-        if (res.data.status === "duplicate") {
-          setNicknameMessage({ text: res.data.message, color: "red" });
-        } else if (res.data.status === "invalid") {
-          setNicknameMessage({ text: res.data.message, color: "red" });
-        } else if (res.data.status === "available") {
-          setNicknameMessage({ text: res.data.message, color: "green" });
-        }
-      })
-      .catch((error) => {
-        console.error(error);
+    if (nickname.length < 9) {
+      axios
+        .post(`${serverUrl}/login/join/nameCheck`, { NAME: nickname })
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.status === "duplicate") {
+            setNicknameMessage({ text: res.data.message, color: "red" });
+          } else if (res.data.status === "invalid") {
+            setNicknameMessage({ text: res.data.message, color: "red" });
+          } else if (res.data.status === "available") {
+            setNicknameMessage({ text: res.data.message, color: "green" });
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else {
+      setNicknameMessage({
+        text: "8글자 이하만 가능합니다",
+        color: "red",
       });
+    }
   };
 
   useEffect(() => {

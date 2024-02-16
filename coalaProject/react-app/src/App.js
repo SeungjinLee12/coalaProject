@@ -26,8 +26,8 @@ import WriteQNA from "./pages/WriteQNA";
 import QNA from "./pages/QNA";
 import ModifyReview from "./pages/ModifyReview";
 import BuyLecture from "./pages/buyLecture";
-
 import Lecture_watch from "./pages/Lecture_watch";
+import RegisterKakao from "./pages/Register_kakao";
 
 import Navbar from "./components/Navbar2";
 import Footer from "./components/Footer";
@@ -51,6 +51,11 @@ const router = createBrowserRouter([
         path: "/lecture/writeReview",
         element: <WriteReview />,
       },
+      {
+        path: "/registerKakao",
+        element: <RegisterKakao />,
+      },
+
       {
         path: "/lecture/writeReview",
         element: <WriteReview />,

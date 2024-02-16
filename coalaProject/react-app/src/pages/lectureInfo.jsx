@@ -6,6 +6,7 @@ import { useAuth } from "../context/authContext";
 import axios from "axios";
 import { Button as BaseButton, buttonClasses } from "@mui/base/Button";
 import { styled } from "@mui/system";
+import Pgbar from "../components/progressbar2";
 
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
@@ -37,27 +38,84 @@ const LectureInfo = () => {
   const [lectureView, setLectureView] = useState([]);
   const [review_list, setReview_list] = useState([]);
   const [userStudy, setUserStudy] = useState([]);
+  const [userlectureLastTime, setLectureLastTime] = useState([]);
+  const [lectureTotalProgress, setLectureTotalProgress] = useState(0);
 
-  const [userEnrolled, setUserEnrolled] = useState(false); // 새로운 상태 추가
-  const [canWriteReview, setCanWriteReview] = useState(false); // 새로운 상태 추가
+  const [userEnrolled, setUserEnrolled] = useState(false);
+  const [userProgress, setUserProgress] = useState(false);
+  const [canWriteReview, setCanWriteReview] = useState(false);
+  const [checkWatchedUser, setCheckWatchedUser] = useState(false);
+  const [checkReviewList, setCheckReviewList] = useState(false);
 
   useEffect(() => {
-    axios
-      .get(`${serverUrl}/lecture`, { params: { lectureNo: lectureNo } })
-      .then((res) => {
-        const resResult = res.data;
+    if (currentUser !== null) {
+      const userNo = currentUser.USER_NO;
+      axios
+        .get(`${serverUrl}/lecture`, {
+          params: { lectureNo: lectureNo, userNo: userNo },
+        })
+        .then((res) => {
+          const resResult = res.data;
 
-        console.log(resResult.lectureView);
+          setInstructor_info(resResult.instructor_info[0]);
+          setLectureTOC_list(resResult.lectureTOC_list);
+          setLectureView(resResult.lectureView[0]);
+          setReview_list(resResult.review_list);
 
-        setInstructor_info(resResult.instructor_info[0]);
-        setLectureTOC_list(resResult.lectureTOC_list);
-        setLectureView(resResult.lectureView[0]);
-        setReview_list(resResult.review_list);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+          if (resResult.lectureTOC_list[0].message === "ok") {
+            setUserProgress(true);
+          }
+
+          if (resResult.userlectureLastTime[0].message === "ok") {
+            setCheckWatchedUser(true);
+            setLectureLastTime(resResult.userlectureLastTime[0]);
+          } else {
+            setCheckWatchedUser(false);
+          }
+
+          if (resResult.review_list[0].message === "ok") {
+            setCheckReviewList(true);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else {
+      axios
+        .get(`${serverUrl}/lecture/not`, {
+          params: { lectureNo: lectureNo },
+        })
+        .then((res) => {
+          const resResult = res.data;
+
+          setInstructor_info(resResult.instructor_info[0]);
+          setLectureTOC_list(resResult.lectureTOC_list);
+          setLectureView(resResult.lectureView[0]);
+          setReview_list(resResult.review_list);
+
+          if (resResult.userlectureLastTime[0].message === "ok") {
+            setCheckWatchedUser(true);
+            setLectureLastTime(resResult.userlectureLastTime[0]);
+          } else {
+            setCheckWatchedUser(false);
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
   }, [lectureNo]);
+
+  useEffect(() => {
+    let totalProgress = 0;
+    // 반복문을 사용하여 각 요소의 tocProgress 값을 더합니다.
+    for (const toc of Object.values(lectureTOC_list)) {
+      totalProgress += toc.tocProgress;
+    }
+    setLectureTotalProgress(totalProgress);
+
+    console.log(totalProgress, lectureView.lectureTotalVideoTime); // 모든 tocProgress 값의 총합이 출력됩니다.
+  });
 
   const [lectureInfo_list, setLectureInfo_list] = useState([]);
 
@@ -161,17 +219,29 @@ const LectureInfo = () => {
   };
 
   const handleTOCClick = (tocNo) => {
-    console.log("Clicked on TOC with tocNo:", tocNo);
-    const lectureTitle = lectureView.title;
-    navigate(`/lecture/watch/?lectureNo=${lectureNo}`, {
-      state: {
-        lectureNo,
-        lectureTitle,
-        tocNo,
-        lectureTOC_list,
-        lectureInfo_list,
-      },
-    });
+    if (userEnrolled === true) {
+      const lectureTitle = lectureView.title;
+      navigate(`/lecture/watch/?lectureNo=${lectureNo}`, {
+        state: {
+          lectureNo,
+          lectureTitle,
+          tocNo,
+          lectureTOC_list,
+          lectureInfo_list,
+        },
+      });
+    }
+  };
+
+  const formatDate = (datetimeString) => {
+    const options = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(datetimeString).toLocaleString("ko-KR", options);
   };
 
   return (
@@ -192,33 +262,39 @@ const LectureInfo = () => {
                   <img
                     src={lectureView.imageUrl}
                     alt={lectureView.title}
-                    style={{ maxWidth: "100%", maxHeight: "100%" }}
+                    style={{ width: "700px", height: "400px" }}
                   />
                 </div>
                 <div style={{ marginLeft: "20px", left: "100%" }}>
-                  <h2 style={{ margin: "10px 0" }}>
-                    {lectureView.description}
-                  </h2>
+                  <h1>{lectureView.title}</h1>
+                  <h5 style={{ marginTop: "10px" }}>강의 설명 : </h5>
+                  <h2>{lectureView.description}</h2>
                   <StarRating star={lectureView.star} />
-                  <p style={{ margin: "10px 0", marginTop: "30px" }}>
-                    수강 기한: {lectureView.period}
-                  </p>
-                  <p style={{ margin: "10px 0", marginTop: "30px" }}>
-                    가격 : {lectureView.price}
-                  </p>
-                  <p style={{ margin: "10px 0", marginTop: "30px" }}>
-                    수강 시작일 : {userStudy.starttime}
-                  </p>
-                  <p style={{ margin: "10px 0", marginTop: "30px" }}>
-                    수강률 : {userStudy.studyrate}
-                  </p>
-                  <div style={{ display: "flex" }}>
-                    {/* <Button style={{}} onClick={WatchLecture}>
-                      이어서 보기
-                    </Button> */}
 
-                    <Button style={{ marginLeft: "20PX" }} onClick={lectureQNA}>
+                  <h5 style={{ marginTop: "20px" }}>강의 진행도 : </h5>
+                  <Pgbar
+                    value={
+                      (lectureTotalProgress /
+                        lectureView.lectureTotalVideoTime) *
+                      100
+                    }
+                  />
+                  <h5 style={{ marginTop: "10px" }}>
+                    마지막 시청시간 : <br />
+                    {checkWatchedUser
+                      ? formatDate(userlectureLastTime.lectureLastTime)
+                      : "아직 강의를 시청하지 않았습니다."}
+                  </h5>
+
+                  <div style={{ display: "flex", marginTop: "20px" }}>
+                    <Button style={{ marginLeft: "" }} onClick={lectureQNA}>
                       강의Q&A
+                    </Button>
+                    <Button
+                      style={{ marginLeft: "5px" }}
+                      onClick={() => handleTOCClick(lectureTOC_list[0].tocNo)}
+                    >
+                      강의보기
                     </Button>
                   </div>
                 </div>
@@ -233,13 +309,10 @@ const LectureInfo = () => {
                   />
                 </div>
                 <div style={{ marginLeft: "20px", left: "100%" }}>
-                  <h2 style={{ margin: "10px 0" }}>
-                    {lectureView.description}
-                  </h2>
+                  <h1>{lectureView.title}</h1>
+                  <h5 style={{ marginTop: "10px" }}>강의 설명 : </h5>
+                  <h2>{lectureView.description}</h2>
                   <StarRating star={lectureView.star} />
-                  <p style={{ margin: "10px 0", marginTop: "30px" }}>
-                    수강 기한: {lectureView.period}
-                  </p>
                   <p style={{ margin: "10px 0", marginTop: "30px" }}>
                     가격 : {lectureView.price}
                   </p>
@@ -262,13 +335,30 @@ const LectureInfo = () => {
               flex: 1,
               border: "1px solid #ccc",
               padding: "10px",
-              height: "200px",
+              height: "250px",
             }}
           >
-            <div>
-              <p>이름 : {instructor_info.instructor_name}</p>
-              <p>이메일 : {instructor_info.instructor_email}</p>
-              <p>경력 : {instructor_info.instructor_career}</p>
+            <div style={{ display: "flex" }}>
+              <div>
+                <img
+                  src={instructor_info.instructor_image}
+                  style={{ maxHeight: "230px" }}
+                />
+              </div>
+              <div style={{ paddingLeft: "10px" }}>
+                <div style={{ display: "flex" }}>
+                  <h1>"{instructor_info.instructor_name}" 강사님</h1>
+                  <p style={{ marginTop: "20px", marginLeft: "10px" }}>
+                    EMAIL : {instructor_info.instructor_email}
+                  </p>
+                </div>
+                <p style={{ paddingTop: "5px" }}>
+                  {instructor_info.instructor_description}
+                </p>
+                <p style={{ marginTop: "10px" }}>
+                  경력 : {instructor_info.instructor_career}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -280,13 +370,21 @@ const LectureInfo = () => {
             {lectureTOC_list.map((toc, index) => (
               <li
                 key={index}
-                style={{ margin: "10px 0" }}
+                style={{ marginLeft: "25%", width: "50%" }}
                 onClick={() => handleTOCClick(toc.tocNo)}
               >
                 <strong>
                   {index + 1}. {toc.toc_title}
                 </strong>
                 : {toc.toc_description}
+                {userProgress ? (
+                  <div>
+                    <Pgbar
+                      style={{ width: "30%" }}
+                      value={(toc.tocProgress / toc.tocTotalVideoTime) * 100}
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -300,95 +398,110 @@ const LectureInfo = () => {
             marginTop: "50px",
           }}
         >
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead style={{ backgroundColor: "#C0C0C0" }}>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    width: "20%",
-                  }}
-                >
-                  작성자
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "8px",
-                    width: "15%",
-                  }}
-                >
-                  평점
-                </th>
-                <th style={{ border: "1px solid #ccc", padding: "8px" }}>
-                  내용
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {review_list.map((review, index) => (
-                <tr key={index}>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    {review.name}
-                  </td>
-                  <td style={{ border: "1px solid #ccc", padding: "8px" }}>
-                    <StarRating star={review.star} />
-                  </td>
-                  <td
+          {checkReviewList ? (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead style={{ backgroundColor: "#C0C0C0" }}>
+                <tr>
+                  <th
                     style={{
-                      display: "flex",
                       border: "1px solid #ccc",
                       padding: "8px",
-                      alignItems: "center",
+                      width: "20%",
                     }}
                   >
-                    <div>{review.review}</div>
-                    <div>
-                      {currentUser && currentUser.NAME === review.name && (
-                        <div
-                          style={{
-                            marginLeft: "50px",
-                            display: "flex",
-                            flexDirection: "row",
-                          }}
-                        >
-                          <Button
-                            className="small"
-                            style={{
-                              width: "50px",
-                              height: "30px",
-                            }}
-                            onClick={() =>
-                              reviewModify(
-                                review.reviewNo,
-                                review.review,
-                                review.star
-                              )
-                            }
-                          >
-                            수정
-                          </Button>
-                          <Button
-                            className="small"
-                            style={{
-                              marginLeft: "5px",
-                              width: "50px",
-                              height: "30px",
-                            }}
-                            type="submit"
-                            onClick={() => reviewDelete(review.reviewNo)}
-                          >
-                            삭제
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                    작성자
+                  </th>
+                  <th
+                    style={{
+                      border: "1px solid #ccc",
+                      padding: "8px",
+                      width: "15%",
+                    }}
+                  >
+                    평점
+                  </th>
+                  <th style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    내용
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {review_list.map((review, index) => (
+                  <tr key={index}>
+                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                      {review.name}
+                      <br />
+                      {formatDate(review.inserttime)}
+                    </td>
+                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                      <StarRating star={review.star} />
+                    </td>
+                    <td
+                      style={{
+                        display: "flex",
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>{review.review}</div>
+                      <div>
+                        {currentUser && currentUser.NAME === review.name && (
+                          <div
+                            style={{
+                              marginLeft: "50px",
+                              display: "flex",
+                              flexDirection: "row",
+                            }}
+                          >
+                            <Button
+                              className="small"
+                              style={{
+                                width: "50px",
+                                height: "30px",
+                              }}
+                              onClick={() =>
+                                reviewModify(
+                                  review.reviewNo,
+                                  review.review,
+                                  review.star
+                                )
+                              }
+                            >
+                              수정
+                            </Button>
+                            <Button
+                              className="small"
+                              style={{
+                                marginLeft: "5px",
+                                width: "50px",
+                                height: "30px",
+                              }}
+                              type="submit"
+                              onClick={() => reviewDelete(review.reviewNo)}
+                            >
+                              삭제
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div
+              style={{
+                marginLeft: "37%",
+                display: "flex",
+                padding: "8px",
+                alignItems: "center",
+              }}
+            >
+              아직 리뷰가 작성되지 않았어요 ㅠㅠ
+            </div>
+          )}
         </div>
         {userEnrolled && canWriteReview && (
           <Button
@@ -396,7 +509,7 @@ const LectureInfo = () => {
             onClick={ReviewWrite}
             style={{ marginTop: "10px" }}
           >
-            저장
+            리뷰작성
           </Button>
         )}
       </div>
@@ -459,5 +572,16 @@ const Button = styled(BaseButton)(
 
   `
 );
+
+const formatDate = (datetimeString) => {
+  const options = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(datetimeString).toLocaleString("ko-KR", options);
+};
 
 export default LectureInfo;

@@ -55,12 +55,13 @@ const Modify_checkUser = () => {
   return (
     <div style={{ textAlign: "center" }}>
       <h1>My Page - 비밀번호 확인</h1>
+      <br />
+      <h3 style={{ marginTop: "50px" }}>비밀번호를 입력해주세요</h3>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          marginTop: "50px",
         }}
       >
         PASSWORD

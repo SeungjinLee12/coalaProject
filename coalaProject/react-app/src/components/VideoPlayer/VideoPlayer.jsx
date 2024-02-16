@@ -11,17 +11,26 @@ import axios from "axios";
 import { AuthContext } from "../../context/authContext";
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
-function VideoPlayer({ src, tocId }) {
+function VideoPlayer({ tocNo, src, lectureNo }) {
   const videoRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const { currentUser } = useContext(AuthContext);
+  const [selectedTOC, setTocNo] = useState("");
+
+  // const [videoStatus, setVideoStatus] = useState(false);
+
+  useEffect(() => {
+    setCurrentTime(0);
+    setTocNo(tocNo);
+  }, [tocNo]);
 
   const playVideo = () => {
     videoRef.current.play();
   };
 
   const pauseVideo = () => {
+    console.log(selectedTOC, src, lectureNo);
     videoRef.current.pause();
   };
 
@@ -49,21 +58,22 @@ function VideoPlayer({ src, tocId }) {
       setDuration(video.duration);
     };
 
-    // const sendProgressToServer = async () => {
-    //   const currentTime = videoRef.current.currentTime;
-    //   console.log(`Sending progress to server: ${currentTime}`);
-    //   const res = await axios.post(`${serverUrl}/lectureDetail/tocInfoSet`, {
-    //     TOCID: tocId,
-    //     UserID: currentUser[0].UserID,
-    //     Progress: currentTime,
-    //   });
-    //   console.log("woo", res.data);
-    //   if (res.data.success) {
-    //     console.log(res.data.message);
-    //   } else {
-    //     alert(res.data.message);
-    //   }
-    // };
+    const sendProgressToServer = async () => {
+      const currentTime = videoRef.current.currentTime;
+      console.log(`Sending progress to server: ${currentTime}`, selectedTOC);
+      const res = await axios.post(`${serverUrl}/lecture/tocInfoSet`, {
+        TOCNo: selectedTOC,
+        userNo: currentUser.USER_NO,
+        Progress: currentTime,
+        lectureNo: lectureNo,
+      });
+      console.log("woo", res.data);
+      if (res.data.success) {
+        console.log(res.data.message);
+      } else {
+        alert(res.data.message);
+      }
+    };
 
     const handleVideoEnd = () => {
       // 비디오가 끝났을 때
@@ -73,15 +83,13 @@ function VideoPlayer({ src, tocId }) {
       clearInterval(playIntervalId);
       video.removeEventListener("timeupdate", timeUpdateHandler);
 
-      // if (currentTime < video.duration) {
-      //   sendProgressToServer();
-      // }
+      sendProgressToServer();
     };
 
     const handlePlayButtonClick = () => {
-      // playIntervalId = setInterval(() => {
-      //   sendProgressToServer();
-      // }, 20000);
+      playIntervalId = setInterval(() => {
+        sendProgressToServer();
+      }, 1000);
       video.addEventListener("timeupdate", timeUpdateHandler);
       video.addEventListener("ended", handleVideoEnd);
     };
@@ -95,7 +103,7 @@ function VideoPlayer({ src, tocId }) {
       video.removeEventListener("play", handlePlayButtonClick);
       video.removeEventListener("loadedmetadata", loadedMetadataHandler);
     };
-  }, [tocId]);
+  }, [selectedTOC]);
 
   return (
     <div className="video-container">
@@ -111,15 +119,15 @@ function VideoPlayer({ src, tocId }) {
         </button>
 
         <button className="control-button" onClick={rewind}>
-          Rewind
+          10초 전으로
         </button>
 
         <button className="control-button" onClick={fastForward}>
-          Fast Forward
+          10초 후로
         </button>
 
         <button className="control-button" onClick={restartVideo}>
-          ReStart
+          다시 보기
         </button>
       </div>
 

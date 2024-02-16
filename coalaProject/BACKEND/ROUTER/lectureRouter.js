@@ -3,9 +3,13 @@ const router = require("express").Router();
 
 //  /lecture
 
-// 강의 상세보기 (수강중X)
+// 강의 상세보기
 router.get("/", async (req, res) => {
   const lectureNo = req.query.lectureNo;
+  const userNo = req.query.userNo;
+  var lectureTOC = [];
+  var lastTime = [];
+  var review = [];
 
   // 조회수 증가
   db.query(
@@ -18,10 +22,12 @@ router.get("/", async (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Internal Server Error" });
         return;
+      } else {
+        console.log(lectureNo, "+1증가");
       }
       // 강의 정보 조회
       db.query(
-        `SELECT TITLE, PERIOD, IMAGEURL, PRICE, STAR, DESCRIPTION 
+        `SELECT TITLE, IMAGEURL, PRICE, STAR, DESCRIPTION, LECTURETOTALVIDEOTIME
           FROM LECTURE 
           WHERE LECTURE_NO = ?`,
         [lectureNo],
@@ -33,31 +39,294 @@ router.get("/", async (req, res) => {
           }
           var lectureView = rows.map((row) => ({
             title: row.TITLE,
-            period: row.PERIOD,
             imageUrl: row.IMAGEURL,
             price: row.PRICE,
             star: row.STAR,
             description: row.DESCRIPTION,
+            lectureTotalVideoTime: row.LECTURETOTALVIDEOTIME,
           }));
           // TOC 조회
+          // db.query(
+          //   `SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
+          //     FROM LectureTOC TOC
+          //     JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+          //     WHERE L.LECTURE_NO = ?`,
+          //   [lectureNo],
+          //   function (err, rows) {
+          //     if (err) {
+          //       console.error(err);
+          //       res.status(500).json({ error: "Internal Server Error" });
+          //       return;
+          //     }
           db.query(
-            `SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
-              FROM LectureTOC TOC 
-              JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
-              WHERE L.LECTURE_NO = ?`,
-            [lectureNo],
-            function (err, rows) {
+            `
+            SELECT TOC.TITLE, TOC.DESCRIPTION, TOC.TOTALVIDEOTIME, TOC.LECTURETOC_NO, IFNULL(UP.PROGRESS, 0) AS PROGRESS
+            FROM LectureTOC TOC 
+            LEFT JOIN USERPROGRESS UP ON UP.LECTURETOC_NO = TOC.LECTURETOC_NO AND UP.USER_NO = ?
+            JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+            WHERE L.LECTURE_NO = ?;
+            `,
+            [userNo, lectureNo],
+            function (err, rows1) {
               if (err) {
                 console.error(err);
                 res.status(500).json({ error: "Internal Server Error" });
                 return;
               }
+              if (rows1.length === 0) {
+                db.query(
+                  `
+                SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
+                  FROM LectureTOC TOC 
+                  JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+                  WHERE L.LECTURE_NO = ?`,
+                  [lectureNo],
+                  function (err, rows) {
+                    if (err) {
+                      throw err;
+                    }
+                    lectureTOC = rows.map((row) => ({
+                      toc_title: row.TITLE,
+                      toc_description: row.DESCRIPTION,
+                      tocNo: row.LECTURETOC_NO,
+                      message: "no",
+                    }));
+                  }
+                );
+              } else {
+                lectureTOC = rows1.map((row) => ({
+                  tocTotalVideoTime: row.TOTALVIDEOTIME,
+                  toc_title: row.TITLE,
+                  toc_description: row.DESCRIPTION,
+                  tocNo: row.LECTURETOC_NO,
+                  tocProgress: row.PROGRESS,
+                  tocLastTime: row.LASTTIME,
+                  message: "ok",
+                }));
+              }
+              // LectureInfo 조회
+              db.query(
+                `SELECT INFO.VIDEOURL, INFO.DESCRIPTION 
+                  FROM LectureInfo INFO 
+                  JOIN LECTURE L ON L.LECTURE_NO =INFO.LECTURE_NO 
+                  WHERE L.LECTURE_NO = ?;`,
+                [lectureNo],
+                function (err, rows) {
+                  if (err) {
+                    console.error(err);
+                    res.status(500).json({ error: "Internal Server Error" });
+                    return;
+                  }
+                  var lectureInfo = rows.map((row) => ({
+                    info_videoUrl: row.VIDEOURL,
+                    info_description: row.DESCRIPTION,
+                  }));
+                  // 리뷰 조회
+                  db.query(
+                    `SELECT R.REVIEW, R.STAR, U.NAME, R.REVIEW_NO, R.INSERTTIME
+                      FROM REVIEW R 
+                      JOIN LECTURE L ON L.LECTURE_NO =R.LECTURE_NO 
+                      JOIN USER U ON U.USER_NO = R.USER_NO 
+                      WHERE L.LECTURE_NO = ?
+                      ORDER BY INSERTTIME DESC;`,
+                    [lectureNo],
+                    function (err, rows) {
+                      if (err) {
+                        console.error(err);
+                        res
+                          .status(500)
+                          .json({ error: "Internal Server Error" });
+                        return;
+                      }
 
-              var lectureTOC = rows.map((row) => ({
-                toc_title: row.TITLE,
-                toc_description: row.DESCRIPTION,
-                tocNo: row.LECTURETOC_NO,
-              }));
+                      if (rows.length === 0) {
+                        review = {
+                          message: "no",
+                        };
+                      } else {
+                        review = rows.map((row) => ({
+                          message: "ok",
+                          review: row.REVIEW,
+                          star: row.STAR,
+                          name: row.NAME,
+                          reviewNo: row.REVIEW_NO,
+                          inserttime: row.INSERTTIME,
+                        }));
+                      }
+                      // 강사 정보 조회
+                      db.query(
+                        `SELECT I.NAME, I.EMAIL, I.CAREER , I.IMAGE, I.Description
+                          FROM INSTRUCTOR I
+                          JOIN LECTURE L ON L.INSTRUCTOR_NO = I.INSTRUCTOR_NO 
+                          WHERE L.LECTURE_NO = ?;`,
+                        [lectureNo],
+                        function (err, rows) {
+                          if (err) {
+                            console.error(err);
+                            res
+                              .status(500)
+                              .json({ error: "Internal Server Error" });
+                            return;
+                          }
+
+                          var instructor = rows.map((row) => ({
+                            instructor_image: row.IMAGE,
+                            instructor_description: row.Description,
+                            instructor_name: row.NAME,
+                            instructor_email: row.EMAIL,
+                            instructor_career: row.CAREER,
+                          }));
+                          db.query(
+                            `SELECT UP.LASTTIME
+                            FROM USERPROGRESS UP
+                            WHERE USER_NO = ? AND LECTURE_NO = ?
+                            ORDER BY LASTTIME DESC
+                            LIMIT 1;`,
+                            [userNo, lectureNo],
+                            function (err, rows) {
+                              if (err) {
+                                console.error(err);
+                                res
+                                  .status(500)
+                                  .json({ error: "Internal Server Error" });
+                                return;
+                              }
+
+                              if (rows.length === 0) {
+                                lastTime = {
+                                  message: "no",
+                                };
+                              } else {
+                                lastTime = rows.map((row) => ({
+                                  lectureLastTime: row.LASTTIME,
+                                  message: "ok",
+                                }));
+                              }
+
+                              const resResult = {
+                                lectureView: lectureView,
+                                lectureTOC_list: lectureTOC,
+                                lectureInfo: lectureInfo,
+                                review_list: review,
+                                instructor_info: instructor,
+                                userlectureLastTime: lastTime,
+                              };
+                              res.json(resResult);
+                              console.log(resResult.lectureTOC_list);
+                            }
+                          );
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+router.get("/not", async (req, res) => {
+  const lectureNo = req.query.lectureNo;
+  const userNo = req.query.userNo;
+  var lectureTOC = [];
+  var lastTime = [];
+
+  // 조회수 증가
+  db.query(
+    `UPDATE LECTURE
+      SET VIEW_CNT = VIEW_CNT+1
+      WHERE LECTURE_NO = ?;`,
+    [lectureNo],
+    function (err, rows) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+        return;
+      } else {
+        console.log(lectureNo, "+1증가");
+      }
+      // 강의 정보 조회
+      db.query(
+        `SELECT TITLE, IMAGEURL, PRICE, STAR, DESCRIPTION, LECTURETOTALVIDEOTIME
+          FROM LECTURE 
+          WHERE LECTURE_NO = ?`,
+        [lectureNo],
+        function (err, rows) {
+          if (err) {
+            console.error(err);
+            res.status(500).json({ error: "Internal Server Error" });
+            return;
+          }
+          var lectureView = rows.map((row) => ({
+            title: row.TITLE,
+            imageUrl: row.IMAGEURL,
+            price: row.PRICE,
+            star: row.STAR,
+            description: row.DESCRIPTION,
+            lectureTotalVideoTime: row.LECTURETOTALVIDEOTIME,
+          }));
+          // TOC 조회
+          // db.query(
+          //   `SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
+          //     FROM LectureTOC TOC
+          //     JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+          //     WHERE L.LECTURE_NO = ?`,
+          //   [lectureNo],
+          //   function (err, rows) {
+          //     if (err) {
+          //       console.error(err);
+          //       res.status(500).json({ error: "Internal Server Error" });
+          //       return;
+          //     }
+          db.query(
+            `
+            SELECT TOC.TITLE, TOC.DESCRIPTION, TOC.TOTALVIDEOTIME, TOC.LECTURETOC_NO
+            FROM LectureTOC TOC 
+            JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+            WHERE L.LECTURE_NO = ?;
+            `,
+            [lectureNo],
+            function (err, rows1) {
+              if (err) {
+                console.error(err);
+                res.status(500).json({ error: "Internal Server Error" });
+                return;
+              }
+              if (rows1.length === 0) {
+                db.query(
+                  `
+                SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
+                  FROM LectureTOC TOC 
+                  JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
+                  WHERE L.LECTURE_NO = ?`,
+                  [lectureNo],
+                  function (err, rows) {
+                    if (err) {
+                      throw err;
+                    }
+                    lectureTOC = rows.map((row) => ({
+                      toc_title: row.TITLE,
+                      toc_description: row.DESCRIPTION,
+                      tocNo: row.LECTURETOC_NO,
+                      message: "no",
+                    }));
+                  }
+                );
+              } else {
+                lectureTOC = rows1.map((row) => ({
+                  tocTotalVideoTime: row.TOTALVIDEOTIME,
+                  toc_title: row.TITLE,
+                  toc_description: row.DESCRIPTION,
+                  tocNo: row.LECTURETOC_NO,
+                  tocProgress: row.PROGRESS,
+                  tocLastTime: row.LASTTIME,
+                  message: "ok",
+                }));
+              }
               // LectureInfo 조회
               db.query(
                 `SELECT INFO.VIDEOURL, INFO.DESCRIPTION 
@@ -99,7 +368,7 @@ router.get("/", async (req, res) => {
                       }));
                       // 강사 정보 조회
                       db.query(
-                        `SELECT I.NAME, I.EMAIL, I.CAREER 
+                        `SELECT I.NAME, I.EMAIL, I.CAREER , I.IMAGE, I.Description
                           FROM INSTRUCTOR I
                           JOIN LECTURE L ON L.INSTRUCTOR_NO = I.INSTRUCTOR_NO 
                           WHERE L.LECTURE_NO = ?;`,
@@ -112,11 +381,33 @@ router.get("/", async (req, res) => {
                               .json({ error: "Internal Server Error" });
                             return;
                           }
+
                           var instructor = rows.map((row) => ({
+                            instructor_image: row.IMAGE,
+                            instructor_description: row.Description,
                             instructor_name: row.NAME,
                             instructor_email: row.EMAIL,
                             instructor_career: row.CAREER,
                           }));
+                          // db.query(
+                          //   `SELECT UP.LASTTIME
+                          //   FROM USERPROGRESS UP
+                          //   WHERE USER_NO = ? AND LECTURE_NO = ?
+                          //   ORDER BY LASTTIME DESC
+                          //   LIMIT 1;`,
+                          //   [lectureNo],
+                          //   function (err, rows) {
+                          //     if (err) {
+                          //       console.error(err);
+                          //       res
+                          //         .status(500)
+                          //         .json({ error: "Internal Server Error" });
+                          //       return;
+                          //     }
+
+                          lastTime = {
+                            message: "no",
+                          };
 
                           const resResult = {
                             lectureView: lectureView,
@@ -124,8 +415,10 @@ router.get("/", async (req, res) => {
                             lectureInfo: lectureInfo,
                             review_list: review,
                             instructor_info: instructor,
+                            userlectureLastTime: lastTime,
                           };
                           res.json(resResult);
+                          console.log(resResult.lectureTOC_list);
                         }
                       );
                     }
@@ -139,6 +432,7 @@ router.get("/", async (req, res) => {
     }
   );
 });
+// });
 
 router.get("/userCheck", (req, res) => {
   const userNo = req.query.userNo;
@@ -297,7 +591,7 @@ router.post("/watch", (req, res) => {
         TOC_no: row.LECTURETOC_NO,
       }));
       db.query(
-        `SELECT INFO.LECTURETOC_NO, INFO.DESCRIPTION , INFO.VIDEOURL , INFO.VIDEOTYPE
+        `SELECT INFO.LECTURETOC_NO, INFO.DESCRIPTION , INFO.VIDEOURL
           FROM LectureInfo INFO
           WHERE INFO.LECTURE_NO = ?;`,
         [lectureNo],
@@ -309,7 +603,6 @@ router.post("/watch", (req, res) => {
             INFO_description: row.DESCRIPTION,
             videoUrl: row.VIDEOURL,
             INFO_lectureTOC_NO: row.LECTURETOC_NO,
-            videoType: row.VIDEOTYPE,
           }));
           const resResult = {
             lecture_watching_TOC: lecture_watching_TOC,
@@ -755,6 +1048,64 @@ router.get("/test3", async (req, res) => {
       );
     }
   );
+});
+
+router.post("/tocInfoSet", (req, res) => {
+  const userNo = req.body.userNo;
+  const TOCNo = req.body.TOCNo;
+  const progress = req.body.Progress;
+  const lectureNo = req.body.lectureNo;
+
+  const sql = `SELECT * FROM USERPROGRESS WHERE USER_NO = ? AND LectureTOC_NO = ?;`;
+  const values = [userNo, TOCNo];
+  db.query(sql, values, (err, selectResult) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Internal Server Error");
+    }
+    if (selectResult.length === 0) {
+      const sql = `INSERT INTO USERPROGRESS (LectureTOC_NO,USER_NO,Progress,LASTTIME,LECTURE_NO)
+          VALUE (?,?,?,NOW(), ?);`;
+      const values = [TOCNo, userNo, progress, lectureNo];
+      db.query(sql, values, (err, insertResult) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).send("Internal Server Error");
+        }
+        if (insertResult.length === 0) {
+          res.json({
+            success: false,
+            message: " false",
+          });
+        } else {
+          res.json({
+            success: true,
+            message: "성공",
+          });
+        }
+      });
+    } else {
+      const sql = `UPDATE USERPROGRESS SET Progress = ? WHERE USER_NO = ? AND LectureTOC_NO = ?;`;
+      const values = [progress, userNo, TOCNo];
+      db.query(sql, values, (err, updateResult) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).send("Internal Server Error");
+        }
+        if (updateResult.length === 0) {
+          res.json({
+            success: false,
+            message: "업데이트 실패",
+          });
+        } else {
+          res.json({
+            success: true,
+            message: "업데이트 성공",
+          });
+        }
+      });
+    }
+  });
 });
 
 module.exports = router;
