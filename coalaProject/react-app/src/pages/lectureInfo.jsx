@@ -233,6 +233,20 @@ const LectureInfo = () => {
     }
   };
 
+  const buyLecture = () => {
+    console.log(`${lectureView.price}`);
+    const price = `${lectureView.price}`;
+    navigate("/api/buyLecture2", {
+      state: {
+        title: `${lectureView.title}`,
+        imageUrl: `${lectureView.imageUrl}`,
+        price: price,
+        lectureNo: lectureNo,
+        totalValue: price,
+      },
+    });
+  };
+
   const formatDate = (datetimeString) => {
     const options = {
       year: "numeric",
@@ -286,15 +300,15 @@ const LectureInfo = () => {
                       : "아직 강의를 시청하지 않았습니다."}
                   </h5>
 
-                  <div style={{ display: "flex", marginTop: "20px" }}>
-                    <Button style={{ marginLeft: "" }} onClick={lectureQNA}>
-                      강의Q&A
-                    </Button>
+                  <div style={{ marginTop: "20px" }}>
                     <Button
-                      style={{ marginLeft: "5px" }}
+                      style={{ width: "270px", height: "50px" }}
                       onClick={() => handleTOCClick(lectureTOC_list[0].tocNo)}
                     >
                       강의보기
+                    </Button>
+                    <Button style={{ marginTop: "10px" }} onClick={lectureQNA}>
+                      강의Q&A
                     </Button>
                   </div>
                 </div>
@@ -305,7 +319,7 @@ const LectureInfo = () => {
                   <img
                     src={lectureView.imageUrl}
                     alt={lectureView.title}
-                    style={{ maxWidth: "100%", maxHeight: "100%" }}
+                    style={{ width: "700px", height: "400px" }}
                   />
                 </div>
                 <div style={{ marginLeft: "20px", left: "100%" }}>
@@ -316,9 +330,14 @@ const LectureInfo = () => {
                   <p style={{ margin: "10px 0", marginTop: "30px" }}>
                     가격 : {lectureView.price}
                   </p>
-                  <Button style={{}} onClick={insertCart}>
-                    장바구니
-                  </Button>
+                  <div style={{ display: "flex" }}>
+                    <Button style={{}} onClick={insertCart}>
+                      장바구니 넣기
+                    </Button>
+                    <Button style={{ marginLeft: "10px" }} onClick={buyLecture}>
+                      구매하기
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -428,7 +447,13 @@ const LectureInfo = () => {
               <tbody>
                 {review_list.map((review, index) => (
                   <tr key={index}>
-                    <td style={{ border: "1px solid #ccc", padding: "8px" }}>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "8px",
+                        height: "30px",
+                      }}
+                    >
                       {review.name}
                       <br />
                       {formatDate(review.inserttime)}
@@ -440,7 +465,7 @@ const LectureInfo = () => {
                       style={{
                         display: "flex",
                         border: "1px solid #ccc",
-                        padding: "8px",
+                        padding: "20px",
                         alignItems: "center",
                       }}
                     >
@@ -572,16 +597,5 @@ const Button = styled(BaseButton)(
 
   `
 );
-
-const formatDate = (datetimeString) => {
-  const options = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  };
-  return new Date(datetimeString).toLocaleString("ko-KR", options);
-};
 
 export default LectureInfo;

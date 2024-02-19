@@ -27,44 +27,64 @@ const QNA = () => {
   } = state;
 
   const [question, setQuestion] = useState([]);
+  const [currentUserName, setCurrentUserName] = useState("");
+
   const [replyList, setReplyList] = useState([]);
 
   const [comments, setComments] = useState("");
   const [editReplyNo, setEditReplyNo] = useState("");
 
   const [buttonState, setButtonState] = useState(false);
+  const [isUserLogined, setIsUserLogined] = useState(false);
 
   const handleCommentChange = (e) => {
     setComments(e.target.value);
   };
 
+  useEffect(() => {
+    if (currentUser !== null) {
+      setIsUserLogined(true);
+      setCurrentUserName(currentUser.NAME);
+    } else {
+      setCurrentUserName("");
+    }
+    axios
+      .post(`${serverUrl}/lecture/QNA/?questionNo=${questionNo}`)
+      .then((res) => {
+        setQuestion(res.data.question_info[0]);
+        setReplyList(res.data.reply_list);
+        console.log(res.data.reply_list);
+      });
+  }, []);
+
   const handleAddComment = () => {
     const userNo = currentUser.USER_NO;
-    console.log(comments.length);
-    if (comments !== "" && comments.length < 1000) {
-      axios
-        .post(`${serverUrl}/lecture/QNA/reply`, {
-          questionNo: questionNo,
-          userNo: userNo,
-          REPLY: comments,
-        })
-        .then((res) => {
-          alert("댓글이 작성되었습니다");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    } else if (comments === "" || comments === null) {
-      alert("댓글을 작성해주세요");
-    } else if (comments.length > 1000) {
-      alert("댓글은 1000자 이상 작성하실 수 없습니다.");
-    }
+    console.log(currentUserName);
+    // console.log(comments.length);
+    // if (comments !== "" && comments.length < 1000) {
+    //   axios
+    //     .post(`${serverUrl}/lecture/QNA/reply`, {
+    //       questionNo: questionNo,
+    //       userNo: userNo,
+    //       REPLY: comments,
+    //     })
+    //     .then((res) => {
+    //       alert("댓글이 작성되었습니다");
+    //       window.location.reload();
+    //     })
+    //     .catch((error) => {
+    //       console.error(error);
+    //     });
+    // } else if (comments === "" || comments === null) {
+    //   alert("댓글을 작성해주세요");
+    // } else if (comments.length > 1000) {
+    //   alert("댓글은 1000자 이상 작성하실 수 없습니다.");
+    // }
   };
 
   const handleReplyDelete = (replyNo, name_r) => {
-    const userNo = currentUser.USER_NO;
-    if (name_r === currentUser.NAME) {
+    if (name_r === userName) {
+      const userNo = currentUser.USER_NO;
       axios
         .post(`${serverUrl}/lecture/QNA/deleteReply`, {
           replyNo: replyNo,
@@ -83,9 +103,6 @@ const QNA = () => {
   };
 
   const handleReplyModify = (name_r, reply, replyNo) => {
-    const userNo = currentUser.USER_NO;
-    const userName = currentUser.NAME;
-
     if (userName === name_r) {
       setComments(reply);
       setButtonState(true);
@@ -94,6 +111,7 @@ const QNA = () => {
         replyDivRef.current.scrollIntoView({ behavior: "smooth" });
       }
     } else {
+      setButtonState(false);
       alert("본인이 작성한 댓글만 수정이 가능합니다.");
     }
   };
@@ -130,16 +148,6 @@ const QNA = () => {
       state: { lectureNo, lectureTitle },
     });
   };
-
-  useEffect(() => {
-    axios
-      .post(`${serverUrl}/lecture/QNA/?questionNo=${questionNo}`)
-      .then((res) => {
-        setQuestion(res.data.question_info[0]);
-        setReplyList(res.data.reply_list);
-        console.log(res.data.reply_list);
-      });
-  }, []);
 
   return (
     <div>
@@ -223,7 +231,7 @@ const QNA = () => {
                       }}
                     >
                       {" "}
-                      {userName === replyList.name_r ? (
+                      {currentUserName === replyList.name_r ? (
                         <div style={{}}>
                           <button
                             onClick={() =>
@@ -271,67 +279,69 @@ const QNA = () => {
                 </td>
               </tr>
             ))}
-            <div
-              style={{
-                marginBottom: "10px",
-                height: "200px",
-                display: "flex",
-                marginTop: "20px",
-              }}
-            >
-              <div style={{ width: "20%" }}></div>
-              <div style={{ border: "1px solid black", width: "65%" }}>
-                <div
-                  style={{
-                    backgroundColor: "#c0c0c0",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "8px",
-                    borderBottom: "1px solid #ccc", // 아래쪽 테두리 추가
-                  }}
-                >
-                  ▶ {currentUser.NAME}
+            {isUserLogined && (
+              <div
+                style={{
+                  marginBottom: "10px",
+                  height: "200px",
+                  display: "flex",
+                  marginTop: "20px",
+                }}
+              >
+                <div style={{ width: "20%" }}></div>
+                <div style={{ border: "1px solid black", width: "65%" }}>
+                  <div
+                    style={{
+                      backgroundColor: "#c0c0c0",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "8px",
+                      borderBottom: "1px solid #ccc", // 아래쪽 테두리 추가
+                    }}
+                  >
+                    ▶ {currentUser.NAME}
+                  </div>
+                  <textarea
+                    placeholder="댓글을 입력하세요."
+                    value={comments}
+                    onChange={handleCommentChange}
+                    style={{
+                      width: "100%",
+                      height: "79%",
+                      boxSizing: "border-box",
+                      whiteSpace: "normal",
+                      resize: "none",
+                    }}
+                    ref={replyDivRef}
+                  ></textarea>
                 </div>
-                <textarea
-                  placeholder="댓글을 입력하세요."
-                  value={comments}
-                  onChange={handleCommentChange}
-                  style={{
-                    width: "100%",
-                    height: "79%",
-                    boxSizing: "border-box",
-                    whiteSpace: "normal",
-                    resize: "none",
-                  }}
-                  ref={replyDivRef}
-                ></textarea>
+                {buttonState === true ? (
+                  <Button
+                    type="submit"
+                    onClick={handleModifyComment}
+                    style={{
+                      height: "40px",
+                      marginTop: "80px",
+                      marginLeft: "10px",
+                    }}
+                  >
+                    댓글 수정
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    onClick={handleAddComment}
+                    style={{
+                      height: "40px",
+                      marginTop: "80px",
+                      marginLeft: "10px",
+                    }}
+                  >
+                    댓글 추가
+                  </Button>
+                )}
               </div>
-              {buttonState === true ? (
-                <Button
-                  type="submit"
-                  onClick={handleModifyComment}
-                  style={{
-                    height: "40px",
-                    marginTop: "80px",
-                    marginLeft: "10px",
-                  }}
-                >
-                  댓글 수정
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  onClick={handleAddComment}
-                  style={{
-                    height: "40px",
-                    marginTop: "80px",
-                    marginLeft: "10px",
-                  }}
-                >
-                  댓글 추가
-                </Button>
-              )}
-            </div>
+            )}
           </tbody>
         </table>
       </div>

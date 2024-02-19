@@ -33,8 +33,9 @@ const WriteQNA = () => {
       questionTitle !== "" &&
       questionContent !== "" &&
       questionTitle.length < 30 &&
-      questionContent < 3050
+      questionContent.length < 3050
     ) {
+      console.log("@@@@@@@@@@@@@@@@@@@@@@@!!!!!!!!!!!!!!!!!");
       axios
         .post(`${serverUrl}/lecture/writeQNA`, {
           TITLE: questionTitle,

@@ -56,7 +56,6 @@ router.get("/", (req, res) => {
               category_list: category,
             };
 
-            // console.log(resResult);
             res.json(resResult);
           }
         );
@@ -219,8 +218,6 @@ router.post("/2", (req, res) => {
   const lectureNo = req.body.lectureNo;
   const userNo = req.body.userNo;
 
-  console.log(lectureNo, userNo);
-
   db.query(
     `
     SELECT SUM(Progress) AS PROGRESS FROM USERPROGRESS
@@ -244,7 +241,6 @@ router.post("/2", (req, res) => {
           var totalTime = rows[0].LECTURETOTALVIDEOTIME;
           var percent = (userProgress / totalTime) * 100;
 
-          console.log(percent, userProgress, totalTime);
           res.json(percent);
         }
       );
@@ -305,7 +301,6 @@ router.get("/research", (req, res) => {
         imageUrl: row.IMAGEURL,
         lectureNo: row.LECTURE_NO,
       }));
-      console.log(research_res);
       res.status(202).json({ status: "yes", research_res });
     }
   );
@@ -346,8 +341,91 @@ router.get("/category", (req, res) => {
           star: row.STAR,
           imageUrl: row.IMAGEURL,
         }));
-        console.log(research_res);
         res.json(research_res);
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/instructorList", (req, res) => {
+  db.query(
+    `SELECT NAME, INSTRUCTOR_NO, EMAIL, IMAGE
+  FROM INSTRUCTOR;`,
+    function (err, rows) {
+      if (err) {
+        throw err;
+      }
+      var instructorList = rows.map((row) => ({
+        name: row.NAME,
+        insNo: row.INSTRUCTOR_NO,
+        email: row.EMAIL,
+        image: row.IMAGE,
+      }));
+
+      res.json(instructorList);
+    }
+  );
+});
+
+router.get("/instructorInfo", (req, res) => {
+  const insNo = req.query.insNo;
+  console.log(insNo);
+  db.query(
+    `SELECT ins.NAME, ins.INSTRUCTOR_NO, ins.EMAIL, ins.IMAGE, ins.CAREER, ins.Description, l.LECTURE_NO,l.IMAGEURL ,l.TITLE ,l.STAR ,l.PRICE
+    FROM INSTRUCTOR ins
+    JOIN LECTURE l ON l.INSTRUCTOR_NO = ins.INSTRUCTOR_NO 
+    WHERE ins.INSTRUCTOR_NO = ?`,
+    [insNo],
+    function (err, rows) {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+        return;
+      }
+      var instructorInfo = rows.map((row) => ({
+        instructor_name: row.NAME,
+        instructor_image: row.IMAGE,
+        instructor_description: row.Description,
+        instructor_email: row.EMAIL,
+        instructor_career: row.CAREER,
+        lecNo: row.LECTURE_NO,
+        lecIMAGE: row.IMAGEURL,
+        lecTitle: row.TITLE,
+        lecStar: row.STAR,
+        lecPrice: row.PRICE,
+      }));
+
+      res.json(instructorInfo);
+      console.log(instructorInfo);
+    }
+  );
+});
+
+router.get("/insLec", (req, res) => {
+  const insNo = req.query.insNo;
+  try {
+    db.query(
+      "SELECT L.LECTURE_NO, L.STAR, L.IMAGEURL, L.TITLE , L.PRICE FROM LECTURE L JOIN INSTRUCTOR ins ON ins.INSTRUCTOR_NO = L.INSTRUCTOR_NO WHERE ins.INSTRUCTOR_NO = ? ORDER BY VIEW_CNT DESC, TITLE ASC;",
+      [insNo],
+      function (err, rows) {
+        if (err) {
+          console.error(err);
+          res.status(500).json({ error: "Internal Server Error" });
+          return;
+        }
+
+        var Lectures = rows.map((row) => ({
+          title: row.TITLE,
+          imageSrc: row.IMAGEURL,
+          star: row.STAR,
+          price: row.PRICE,
+          lectureNo: row.LECTURE_NO,
+        }));
+
+        res.json(Lectures);
       }
     );
   } catch (error) {

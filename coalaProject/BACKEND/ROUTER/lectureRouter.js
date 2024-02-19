@@ -212,7 +212,6 @@ router.get("/", async (req, res) => {
                                 userlectureLastTime: lastTime,
                               };
                               res.json(resResult);
-                              console.log(resResult.lectureTOC_list);
                             }
                           );
                         }
@@ -269,19 +268,7 @@ router.get("/not", async (req, res) => {
             description: row.DESCRIPTION,
             lectureTotalVideoTime: row.LECTURETOTALVIDEOTIME,
           }));
-          // TOC 조회
-          // db.query(
-          //   `SELECT TOC.TITLE, TOC.DESCRIPTION , TOC.LECTURETOC_NO
-          //     FROM LectureTOC TOC
-          //     JOIN LECTURE L ON L.LECTURE_NO = TOC.LECTURE_NO
-          //     WHERE L.LECTURE_NO = ?`,
-          //   [lectureNo],
-          //   function (err, rows) {
-          //     if (err) {
-          //       console.error(err);
-          //       res.status(500).json({ error: "Internal Server Error" });
-          //       return;
-          //     }
+
           db.query(
             `
             SELECT TOC.TITLE, TOC.DESCRIPTION, TOC.TOTALVIDEOTIME, TOC.LECTURETOC_NO
@@ -389,21 +376,6 @@ router.get("/not", async (req, res) => {
                             instructor_email: row.EMAIL,
                             instructor_career: row.CAREER,
                           }));
-                          // db.query(
-                          //   `SELECT UP.LASTTIME
-                          //   FROM USERPROGRESS UP
-                          //   WHERE USER_NO = ? AND LECTURE_NO = ?
-                          //   ORDER BY LASTTIME DESC
-                          //   LIMIT 1;`,
-                          //   [lectureNo],
-                          //   function (err, rows) {
-                          //     if (err) {
-                          //       console.error(err);
-                          //       res
-                          //         .status(500)
-                          //         .json({ error: "Internal Server Error" });
-                          //       return;
-                          //     }
 
                           lastTime = {
                             message: "no",
@@ -505,8 +477,8 @@ router.post("/writeReview", (req, res) => {
     const star = req.body.STAR;
 
     db.query(
-      `INSERT INTO REVIEW (REVIEW, LECTURE_NO, USER_NO, STAR)
-        VALUES (?, ?, ?, ?);`,
+      `INSERT INTO REVIEW (REVIEW, LECTURE_NO, USER_NO, STAR,INSERTTIME)
+        VALUES (?, ?, ?, ?,  DATE_ADD(NOW(), INTERVAL 9 HOUR));`,
       [review, lectureNo, userNo, star],
       function (err, rows) {
         if (err) {
@@ -626,6 +598,26 @@ router.get("/QNAList", (req, res) => {
     JOIN USER U ON U.USER_NO = Q.USER_NO
     WHERE L.LECTURE_NO = ?;`,
     [lectureNo],
+    function (err, rows) {
+      if (err) throw err;
+      var question = rows.map((row) => ({
+        questionTitle: row.TITLE,
+        userName: row.NAME,
+        lecture_title: row.LECTURE_TITLE,
+        inserttime: row.INSERTTIME,
+        questionNo: row.QUESTION_NO,
+      }));
+      res.json(question);
+    }
+  );
+});
+
+router.get("/QNAAllList", (req, res) => {
+  db.query(
+    `SELECT Q.TITLE, U.NAME, L.TITLE AS "LECTURE_TITLE", Q.INSERTTIME, Q.QUESTION_NO
+    FROM QUESTION Q
+    JOIN LECTURE L ON Q.LECTURE_NO = L.LECTURE_NO
+    JOIN USER U ON U.USER_NO = Q.USER_NO`,
     function (err, rows) {
       if (err) throw err;
       var question = rows.map((row) => ({
@@ -843,39 +835,66 @@ router.post("/insertPayment", (req, res) => {
   );
 });
 
-// 수강신청
-router.post("/add_study", (req, res) => {
-  try {
-    const lectureNo = req.query.lectureNo;
-    const userNo = req.query.userNo;
+router.post("/insertPayment2", (req, res) => {
+  const lectureNo = req.body.lectureNo;
+  const userNo = req.body.userNo;
 
-    db.query(
-      `INSERT INTO STUDY (LECTURE_NO, USER_NO, STARTTIME)
+  db.query(
+    `INSERT INTO PAYMENT (USER_NO, LECTURE_NO, PAYMENTTIME)
       VALUES (?, ?, SYSDATE());`,
-      [lectureNo, userNo],
-      (err, rows) => {
-        if (err) {
-          throw err;
-        }
-
-        db.query(
-          `INSERT INTO STUDY (LECTURE_NO, USER_NO, STARTTIME)
-        VALUES (?, ?, SYSDATE());`,
-          [lectureNo, userNo],
-          (err, rows) => {
-            if (err) {
-              throw err;
-            }
-            res.sendStatus(200);
-          }
-        );
+    [userNo, lectureNo],
+    (err, rows) => {
+      if (err) {
+        throw err;
       }
-    );
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+      db.query(
+        `INSERT INTO STUDY (LECTURE_NO, USER_NO, STARTTIME)
+      VALUES (?, ?, SYSDATE());`,
+        [lectureNo, userNo],
+        (err, rows) => {
+          if (err) {
+            throw err;
+          }
+          res.sendStatus(200);
+        }
+      );
+    }
+  );
 });
+
+// 수강신청
+// router.post("/add_study", (req, res) => {
+//   try {
+//     const lectureNo = req.query.lectureNo;
+//     const userNo = req.query.userNo;
+
+//     db.query(
+//       `INSERT INTO STUDY (LECTURE_NO, USER_NO, STARTTIME)
+//       VALUES (?, ?, SYSDATE());`,
+//       [lectureNo, userNo],
+//       (err, rows) => {
+//         if (err) {
+//           throw err;
+//         }
+
+//         db.query(
+//           `INSERT INTO STUDY (LECTURE_NO, USER_NO, STARTTIME)
+//         VALUES (?, ?, SYSDATE());`,
+//           [lectureNo, userNo],
+//           (err, rows) => {
+//             if (err) {
+//               throw err;
+//             }
+//             res.sendStatus(200);
+//           }
+//         );
+//       }
+//     );
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
 
 // 카트에 넣기
 router.post("/add_cart", (req, res) => {
@@ -1065,7 +1084,7 @@ router.post("/tocInfoSet", (req, res) => {
     }
     if (selectResult.length === 0) {
       const sql = `INSERT INTO USERPROGRESS (LectureTOC_NO,USER_NO,Progress,LASTTIME,LECTURE_NO)
-          VALUE (?,?,?,NOW(), ?);`;
+          VALUE (?,?,?, DATE_ADD(NOW(), INTERVAL 9 HOUR), ?);`;
       const values = [TOCNo, userNo, progress, lectureNo];
       db.query(sql, values, (err, insertResult) => {
         if (err) {

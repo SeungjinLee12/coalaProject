@@ -18,6 +18,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.static("public"));
 
+const management = require("./ROUTER/managementRouter");
 const mainPage = require("./ROUTER/mainPageRouter");
 const login = require("./ROUTER/loginRouter");
 const modifyUser = require("./ROUTER/modifyUserRouter");
@@ -29,6 +30,7 @@ app.use("/api", mainPage);
 app.use("/login", login);
 app.use("/modifyUser", modifyUser);
 app.use("/lecture", lecture);
+app.use("/management", management);
 
 app.listen(port, () => {
   console.log("코알라 서버 포트 : " + port);

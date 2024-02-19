@@ -15,10 +15,9 @@ const { query } = require("express");
 router.post("/", (req, res) => {
   const email = req.body.email; // 이 부분도 소문자로 변경
   const password = req.body.password; // 이 부분도 소문자로 변경
-  console.log(email, password);
 
   db.query(
-    `SELECT USER_NO, EMAIL, PASSWORD, INTEREST1, INTEREST2, INTEREST3, PHONE, NAME, IMAGE
+    `SELECT USER_NO, EMAIL, PASSWORD, INTEREST1, INTEREST2, INTEREST3, PHONE, NAME, TYPE
     FROM USER
     WHERE EMAIL = ?;`,
     [email],
@@ -30,7 +29,6 @@ router.post("/", (req, res) => {
 
         if (rows.length > 0) {
           const storedPassword = rows[0].PASSWORD;
-          console.log(storedPassword);
 
           try {
             const passwordMatch = bcrypt.compareSync(password, storedPassword);
@@ -43,6 +41,7 @@ router.post("/", (req, res) => {
                   interest1: rows[0].INTEREST1,
                   interest2: rows[0].INTEREST2,
                   interest3: rows[0].INTEREST3,
+                  type: rows[0].TYPE,
                 },
                 "secretKey"
               );
@@ -56,7 +55,6 @@ router.post("/", (req, res) => {
                 login_user_interest2: row.INTEREST2,
                 login_user_interest3: row.INTEREST3,
               }));
-              console.log(loginUser);
               res
                 .cookie("access_token", token, {
                   httpOnly: true,
@@ -87,11 +85,9 @@ router.get("/logout", (req, res) => {
     // 클라이언트로부터 쿠키를 얻기 위해 request.cookies 사용
 
     const cookies = req.cookies;
-    console.log("no~~~~~~~~~~~~~~~~~~~~~~~~~~~", cookies);
     if (cookies !== null) {
       for (const userToken in cookies) {
         if (cookies.hasOwnProperty(userToken)) {
-          console.log("ok~~~~~~~~~~~~~~~~~~~~~~~~~~asdasd~");
           // 쿠키의 maxAge를 0으로 설정하여 쿠키 만료
           res.cookie(userToken, "", { maxAge: 0, httpOnly: true });
         }
@@ -205,7 +201,6 @@ router.post("/join_user", async (req, res) => {
   const sql = `INSERT INTO USER (NAME, EMAIL, PASSWORD, PHONE, BIRTH, INTEREST1, INTEREST2, INTEREST3)
   VALUES (?,?,?,?,?,?,?,?);`;
 
-  console.log(sql);
   db.query(
     sql,
     [
@@ -222,7 +217,6 @@ router.post("/join_user", async (req, res) => {
       if (err) {
         throw err;
       }
-      console.log(rows);
       res.send("회원가입 성공");
     }
   );
@@ -319,7 +313,6 @@ router.get("/join/interest", (req, res) => {
 
 router.post("/kakao/callback", async function (req, res) {
   const access_token = req.body.idToken;
-  console.log("access_token", access_token);
   let UserEmail = "";
   let Password = "";
   let UserCellPhone = "";

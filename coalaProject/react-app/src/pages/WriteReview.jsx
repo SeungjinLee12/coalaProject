@@ -548,6 +548,7 @@ const WriteReview = () => {
             padding: "10px",
             boxSizing: "border-box",
             whiteSpace: "normal", // 줄 바꿈을 하지 않음
+            resize: "none",
           }}
           value={reviewText}
           onChange={handleReviewTextChange} // 입력된 값을 표시

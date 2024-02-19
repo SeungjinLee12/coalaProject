@@ -21,6 +21,8 @@ const BuyLecture = (payinfo) => {
   const location = useLocation();
   const { state } = location;
   const { checkedCartData, totalValue, checkedCartNumbers } = state;
+
+  console.log(state);
   const { currentUser } = useContext(AuthContext);
 
   let body = {
@@ -72,7 +74,7 @@ const BuyLecture = (payinfo) => {
       ))}
       <div style={{ marginLeft: "50%", marginTop: "100px" }}>
         <p style={{}}>총 : {formatNumberWithCommas(totalValue)}원 </p>
-        <Payment item={payinfo} payinfo={body} />
+        <Payment payinfo={body} />
       </div>
     </div>
   );

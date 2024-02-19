@@ -34,35 +34,36 @@ const Cart = () => {
 
   const handleButtonClick = () => {
     console.log(cartData, cartData.length);
-    // const checkedCartNumbers = Object.entries(checkedItems)
-    //   .filter(([_, isChecked]) => isChecked)
-    //   .map(([lectureNo, _]) => lectureNo);
+    const checkedCartNumbers = Object.entries(checkedItems)
+      .filter(([_, isChecked]) => isChecked)
+      .map(([lectureNo, _]) => lectureNo);
 
-    // const totalValue = cartData
-    //   .filter((item) => checkedItems[item.lectureNo])
-    //   .reduce((sum, item) => sum + item.price, 0);
+    const totalValue = cartData
+      .filter((item) => checkedItems[item.lectureNo])
+      .reduce((sum, item) => sum + item.price, 0);
 
-    // console.log("체크된 항목들의 총 가격:", totalValue);
-    // const checkedCartData = cartData.filter(
-    //   (item) => checkedItems[item.lectureNo]
-    // );
+    console.log("체크된 항목들의 총 가격:", totalValue);
+    const checkedCartData = cartData.filter(
+      (item) => checkedItems[item.lectureNo]
+    );
 
-    // console.log("체크된 항목들의 전체 정보:", checkedCartData);
-    // if (checkedCartData.length !== 0) {
-    //   setTimeout(() => {
-    //     navigate("/api/buyLecture", {
-    //       state: { checkedCartData, totalValue, checkedCartNumbers },
-    //     });
-    //   }, 1000);
-    // } else {
-    //   alert("선택된 과목이 없습니다!");
-    // }
+    console.log("체크된 항목들의 전체 정보:", checkedCartData);
+    if (checkedCartData.length !== 0) {
+      setTimeout(() => {
+        navigate("/api/buyLecture", {
+          state: { checkedCartData, totalValue, checkedCartNumbers },
+        });
+      }, 1000);
+    } else {
+      alert("선택된 과목이 없습니다!");
+    }
   };
 
   const formatNumberWithCommas = (number) => {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
+  // 지혜바보
   const handleDeleteButtonClick = () => {
     const checkedCartNumbers = Object.entries(checkedItems)
       .filter(([_, isChecked]) => isChecked)

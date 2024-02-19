@@ -194,7 +194,6 @@ router.post("/interest", (req, res) => {
   const i1 = req.body.INTEREST1;
   const i2 = req.body.INTEREST2;
   const i3 = req.body.INTEREST3;
-  console.log(userNo, i1, i2, i3, "anfsdjknfajksnfjkdnj");
 
   db.query(
     `UPDATE USER

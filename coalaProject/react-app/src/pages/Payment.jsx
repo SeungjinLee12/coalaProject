@@ -6,7 +6,7 @@ import { AuthContext } from "../context/authContext";
 const paykey = process.env.REACT_APP_PAY;
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
-const Payment = ({ item, payinfo }) => {
+const Payment = ({ payinfo }) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(AuthContext);
 
@@ -75,6 +75,17 @@ const Payment = ({ item, payinfo }) => {
         // callback
         if (rsp.success) {
           alert("결제완료");
+          const userNo = currentUser.USER_NO;
+          for (const lectureNo of payinfo.checkedCartNumbers) {
+            axios.post(`${serverUrl}/lecture/insertPayment`, {
+              userNo: userNo,
+              lectureNo: lectureNo,
+            });
+          }
+          setTimeout(() => {
+            alert("결제가 완료되었습니다.");
+            navigate("/api");
+          }, 1000);
         } else {
           console.log(rsp);
           alert("결제실패", rsp.error_msg, rsp.error_code);

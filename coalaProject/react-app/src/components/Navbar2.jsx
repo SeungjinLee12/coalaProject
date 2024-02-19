@@ -4,6 +4,9 @@ import React, { useState, useEffect, useContext } from "react"; // Keep only one
 import axios from "axios";
 import { AuthContexProvider, AuthContext } from "../context/authContext";
 import { useAuth } from "../context/authContext";
+import Menu2 from "./Menu2";
+import Menu from "./Menu";
+
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Navbar = () => {
@@ -38,7 +41,6 @@ const Navbar = () => {
   };
 
   ///////////////////////////////////////////////////////////////////////////////////////////
-  const { logout } = useContext(AuthContext);
   const { currentUser } = useContext(AuthContext);
   const [isCategoryOpen, setCategoryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -48,10 +50,12 @@ const Navbar = () => {
 
   const [dropdownItems, setDropdownItems] = useState([]);
   const [generatedSubItems, setGeneratedSubItems] = useState({});
-  const handleLogout = async () => {
-    logout();
-    navigate("/login"); // "/"로 이동
-  };
+
+  // const { logout } = useContext(AuthContext);
+  // const handleLogout = async () => {
+  //   logout();
+  //   navigate("/login"); // "/"로 이동
+  // };
 
   ///////////////////////////////////////////////////////////////////////////////////////
   const searchSearchCategory = (item) => {
@@ -129,7 +133,7 @@ const Navbar = () => {
         onMouseEnter={handleCategoryHover}
         onMouseLeave={handleCategoryLeave}
       >
-        <h4 style={{ margin: 0 }}>Category</h4>
+        <h4 style={{ margin: 0, fontWeight: "bold" }}>Category</h4>
         {isCategoryOpen && (
           <div
             style={{
@@ -140,7 +144,7 @@ const Navbar = () => {
               boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
               zIndex: 1,
               width: "130px",
-              marginRight: "100px",
+              // marginRight: "100px",
             }}
             onMouseEnter={handleSubCategoryHover}
             onMouseLeave={handleSubCategoryLeave}
@@ -287,27 +291,22 @@ const Navbar = () => {
           </div>
         </a>
 
-        <div className="code_view actionBtn7 category" style={{}}>
+        <div
+          className="code_view actionBtn7 category"
+          style={{ marginLeft: "20px", marginBottom: "" }}
+        >
           {generateDropdownItems(dropdownItems)}
         </div>
-        <div className="code_view actionBtn7 category" style={{}}>
-          <button
-            onClick={myPageEnter}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "18px",
-              fontWeight: "bold",
-              marginTop: "45px",
-            }}
-          >
-            MyPage
-          </button>
+        <div style={{ marginTop: "80px", marginLeft: "" }}>
+          <Menu2 />
         </div>
 
         <form
           className="search-container"
-          style={{ marginRight: "20px", width: "230px" }}
+          style={{
+            marginRight: "",
+            width: "230px",
+          }}
         >
           <input
             type="text"
@@ -327,43 +326,11 @@ const Navbar = () => {
         </form>
         <div>
           {currentUser !== null ? (
-            <div style={{ marginTop: "80px", marginLeft: "20px" }}>
-              <a
-                className="code_view actionBtn7"
-                style={{ marginBottom: "10px", marginRight: "0px" }}
-              >
-                <button
-                  onClick={myPageEnter}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  MyPage
-                </button>
-              </a>
-
-              <a
-                className="code_view actionBtn7"
-                style={{ marginBottom: "10px", marginRight: "20px" }}
-              >
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "18px",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Logout
-                </button>
-              </a>
+            <div style={{ marginTop: "80px" }}>
+              <Menu currentUser={currentUser} />
             </div>
           ) : (
-            <div style={{ marginTop: "80px", marginLeft: "20px" }}>
+            <div style={{ marginTop: "80px", marginLeft: "", display: "flex" }}>
               <Link
                 to="/login"
                 className="code_view actionBtn7"
@@ -375,7 +342,11 @@ const Navbar = () => {
               <Link
                 to="/register"
                 className="code_view actionBtn7"
-                style={{ marginBottom: "10px", marginRight: "20px" }}
+                style={{
+                  marginBottom: "10px",
+                  marginRight: "20px",
+                  width: "100px",
+                }}
               >
                 <h4 style={{ margin: 0 }}>Register</h4>
               </Link>

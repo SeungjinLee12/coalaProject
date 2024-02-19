@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../context/authContext";
+
 const serverUrl = process.env.REACT_APP_SERVER_URL;
 
 const Modify_checkUser = () => {
@@ -31,8 +33,11 @@ const Modify_checkUser = () => {
   }, []);
 
   const location = useLocation();
+  const { state } = location;
+  const { menuItem } = state;
+  const { currentUser } = useContext(AuthContext);
 
-  const currentUser = location.state?.currentUser || [];
+  // const currentUser = location.state?.currentUser || [];
 
   const handleButtonClick = () => {
     axios
@@ -41,11 +46,14 @@ const Modify_checkUser = () => {
         { PASSWORD: userCheckPassword }
       )
       .then((res) => {
-        console.log(res.data);
         if (res.data.success === true) {
-          setTimeout(() => {
-            navigate("/modifyUser/information");
-          }, 1000);
+          if (menuItem === "manage") {
+            navigate(`/management/manage`);
+          } else {
+            setTimeout(() => {
+              navigate(`/modifyUser/${menuItem}`);
+            }, 1000);
+          }
         } else {
           alert("비밀번호가 일치하지 않습니다.");
         }

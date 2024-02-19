@@ -22,12 +22,19 @@ import LectureInfo from "./pages/lectureInfo";
 import LectureInfo2 from "./pages/lectureInfo2";
 import WriteReview from "./pages/WriteReview";
 import QNAList from "./pages/QNAList";
+import InstructorList from "./pages/InstructorList";
+import InstructorInfo from "./pages/InstructorInfo";
+import QNAAllList from "./pages/QNAAllList";
 import WriteQNA from "./pages/WriteQNA";
 import QNA from "./pages/QNA";
 import ModifyReview from "./pages/ModifyReview";
 import BuyLecture from "./pages/buyLecture";
+import BuyLecture2 from "./pages/buyLecture2";
 import Lecture_watch from "./pages/Lecture_watch";
 import RegisterKakao from "./pages/Register_kakao";
+import ManageInstructor from "./pages/management/manageInstructor";
+import ManageLecture from "./pages/management/manageLecture";
+import ManageHome from "./pages/management/manageHome";
 
 import Navbar from "./components/Navbar2";
 import Footer from "./components/Footer";
@@ -52,6 +59,26 @@ const router = createBrowserRouter([
         element: <WriteReview />,
       },
       {
+        path: "/management/addInstructor",
+        element: <ManageInstructor />,
+      },
+      {
+        path: "/management/addLecture",
+        element: <ManageLecture />,
+      },
+      {
+        path: "/management/manage",
+        element: <ManageHome />,
+      },
+      {
+        path: "/instructorInfo/:insNo",
+        element: <InstructorInfo />,
+      },
+      {
+        path: "/lecture/modifyReview",
+        element: <ModifyReview />,
+      },
+      {
         path: "/registerKakao",
         element: <RegisterKakao />,
       },
@@ -64,6 +91,10 @@ const router = createBrowserRouter([
         path: "/api/buyLecture",
         element: <BuyLecture />,
       },
+      {
+        path: "/api/buyLecture2",
+        element: <BuyLecture2 />,
+      },
 
       {
         path: "/lecture/writeQNA",
@@ -73,6 +104,10 @@ const router = createBrowserRouter([
       {
         path: "/lecture/:lectureNo",
         element: <LectureInfo />,
+      },
+      {
+        path: "/instructorList",
+        element: <InstructorList />,
       },
       {
         path: "/lecture/title/:title",
@@ -125,6 +160,10 @@ const router = createBrowserRouter([
       {
         path: "/lecture/QNAList",
         element: <QNAList />,
+      },
+      {
+        path: "/QNAAllList",
+        element: <QNAAllList />,
       },
       {
         path: "/lecture/QNA",

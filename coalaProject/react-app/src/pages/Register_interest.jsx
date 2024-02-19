@@ -157,7 +157,7 @@ const Register = () => {
     <>
       <h1>관심분야 설정</h1>
       {[0, 1, 2].map((index) => (
-        <div style={{ display: "flex" }} key={index}>
+        <div style={{ display: "flex", marginTop: "10px" }} key={index}>
           <Dropdown
             label={`Category ${index + 1}`}
             options={upperCategory}
